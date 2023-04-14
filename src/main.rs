@@ -1,5 +1,5 @@
-use std::fs::{File, OpenOptions};
-use std::io::{copy, Write};
+use std::fs::OpenOptions;
+use std::io:: Write;
 use std::{env, fs};
 
 use curl::easy::Easy;
@@ -42,14 +42,16 @@ impl EventHandler for Handler {
                 println!("Error: {:?}", why)
             }
             let index = index_messages(msg.channel_id, &ctx).await;
+            let search_strings = ["https://cdn.discordapp.com", "https://media.discordapp.net"];
             for i in index.split_whitespace() {
-                if i.contains("cdn.discordapp.com") {
-                    println!("string gefunden: {}", i);
-                    dbg!(&i.trim());
-                    let i_trim = i.trim().replace("\"", "");
-                    downloader(i_trim);
-                } else {
-                    continue;
+                for string in &search_strings {
+                    if i.contains(string) {
+                        println!("string gefunden: {}", i);
+                        let i_trim = i.trim().replace("\"", "");
+                        downloader(i_trim);
+                    } else {
+                        continue;
+                    }
                 }
             }
         } else if msg.content == "<@927882552046399538> ping" {
