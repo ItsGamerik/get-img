@@ -1,18 +1,19 @@
 use std::fs::OpenOptions;
-use std::io:: Write;
+use std::io::Write;
 use std::{env, fs};
 
 use curl::easy::Easy;
-use serenity::async_trait;
+use serenity::{async_trait};
 use serenity::futures::StreamExt;
-use serenity::http::Http;
-use serenity::model::prelude::{ChannelId, Message, MessagesIter, Ready};
+
+use serenity::model::prelude::{ChannelId, Message, Ready, MessageId};
 use serenity::prelude::*;
 
 struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
+    
     // Set a handler for the `message` event - so that whenever a new message
     // is received - the closure (or function) passed will be called.
     //
@@ -32,8 +33,7 @@ impl EventHandler for Handler {
 
     // 927882552046399538
     async fn message(&self, ctx: Context, msg: Message) {
-        // dbg!(serenity::model::id::UserId(927882552046399538).to_string()); LMAO IZAWGDOLAIWVDLOAIWDVAUIWZDVGO WAAAAARUUUUM XD
-        if msg.content == "<@927882552046399538> index" {
+        if msg.content == "<@1096476929915359323> index" {
             if let Err(why) = msg
                 .channel_id
                 .say(&ctx.http, "nachriten auflisten...")
@@ -41,7 +41,7 @@ impl EventHandler for Handler {
             {
                 println!("Error: {:?}", why)
             }
-            let index = index_messages(msg.channel_id, &ctx).await;
+            let index = index_messages2(msg.channel_id, &ctx).await;
             let search_strings = ["https://cdn.discordapp.com", "https://media.discordapp.net"];
             for i in index.split_whitespace() {
                 for string in &search_strings {
@@ -54,11 +54,11 @@ impl EventHandler for Handler {
                     }
                 }
             }
-        } else if msg.content == "<@927882552046399538> ping" {
+        } else if msg.content == "<@1096476929915359323> ping" {
             if let Err(why) = msg.channel_id.say(&ctx.http, "pong!").await {
                 println!("Error: {:?}", why)
             }
-        } else if msg.content == "<@927882552046399538>" {
+        } else if msg.content == "<@1096476929915359323>" {
             if let Err(why) = msg.channel_id.say(&ctx.http, "commands: index, ping").await {
                 println!("Error: {}", why);
             }
@@ -77,7 +77,7 @@ impl EventHandler for Handler {
 }
 
 async fn index_messages(channel_id: ChannelId, ctx: &Context) -> String {
-    let mut messages = MessagesIter::<Http>::stream(&ctx, channel_id).boxed();
+    let mut messages = channel_id.messages_iter(&ctx).boxed();
 
     let mut s = String::new();
 
@@ -91,6 +91,22 @@ async fn index_messages(channel_id: ChannelId, ctx: &Context) -> String {
         }
     }
     s
+}
+
+async fn index_messages2(channel_id: ChannelId, ctx: &Context) -> String {
+    let mut s = String::new();
+
+    let messages = channel_id
+    .messages(&ctx, |retriever| retriever.after(MessageId(958093372176863232)).limit(1000))
+    .await;
+    // if let Err(why) = messages {
+    //     eprintln!("error while reading messages: {why}");
+    // }
+
+    for i in &messages {
+        dbg!(i);
+    }
+    todo!();
 }
 
 fn downloader(url: String) {
