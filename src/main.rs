@@ -1,5 +1,8 @@
-use std::env;
+use std::fs::{File, OpenOptions};
+use std::io::{copy, Write};
+use std::{env, fs};
 
+use curl::easy::Easy;
 use serenity::async_trait;
 use serenity::futures::StreamExt;
 use serenity::http::Http;
@@ -39,11 +42,12 @@ impl EventHandler for Handler {
                 println!("Error: {:?}", why)
             }
             let index = index_messages(msg.channel_id, &ctx).await;
-            dbg!(&index);
             for i in index.split_whitespace() {
                 if i.contains("cdn.discordapp.com") {
                     println!("string gefunden: {}", i);
-                    todo!();
+                    dbg!(&i.trim());
+                    let i_trim = i.trim().replace("\"", "");
+                    downloader(i_trim);
                 } else {
                     continue;
                 }
@@ -85,6 +89,21 @@ async fn index_messages(channel_id: ChannelId, ctx: &Context) -> String {
         }
     }
     s
+}
+
+fn downloader(url: String) {
+    if let Err(why) = fs::create_dir_all("./download/") {
+        eprintln!("error creating file: {}", why);
+    }
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(true)
+        .open("./download/output.txt")
+        .unwrap();
+    if let Err(why) = writeln!(file, "{url}") {
+        eprintln!("error while writing to file: {}", why);
+    }
 }
 
 #[tokio::main]
