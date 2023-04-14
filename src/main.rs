@@ -2,6 +2,7 @@ use std::fs::OpenOptions;
 use std::io:: Write;
 use std::{env, fs};
 
+use curl::easy::Easy;
 use serenity::async_trait;
 use serenity::futures::StreamExt;
 use serenity::http::Http;
