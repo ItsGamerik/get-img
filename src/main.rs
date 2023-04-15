@@ -1,12 +1,11 @@
 use std::fs::OpenOptions;
-use std::io:: Write;
+use std::io::Write;
 use std::{env, fs};
 
-use curl::easy::Easy;
 use serenity::async_trait;
 use serenity::futures::StreamExt;
-use serenity::http::Http;
-use serenity::model::prelude::{ChannelId, Message, MessagesIter, Ready};
+
+use serenity::model::prelude::{ChannelId, Message, MessageId, Ready};
 use serenity::prelude::*;
 
 struct Handler;
@@ -32,8 +31,7 @@ impl EventHandler for Handler {
 
     // 927882552046399538
     async fn message(&self, ctx: Context, msg: Message) {
-        // dbg!(serenity::model::id::UserId(927882552046399538).to_string()); LMAO IZAWGDOLAIWVDLOAIWDVAUIWZDVGO WAAAAARUUUUM XD
-        if msg.content == "<@927882552046399538> index" {
+        if msg.content == "<@1096476929915359323> index" {
             if let Err(why) = msg
                 .channel_id
                 .say(&ctx.http, "nachriten auflisten...")
@@ -41,24 +39,17 @@ impl EventHandler for Handler {
             {
                 println!("Error: {:?}", why)
             }
-            let index = index_messages(msg.channel_id, &ctx).await;
+            let index = index_messages2(msg.channel_id, &ctx, msg.into()).await;
             let search_strings = ["https://cdn.discordapp.com", "https://media.discordapp.net"];
             for i in index.split_whitespace() {
-                for string in &search_strings {
-                    if i.contains(string) {
-                        println!("string gefunden: {}", i);
-                        let i_trim = i.trim().replace("\"", "");
-                        downloader(i_trim);
-                    } else {
-                        continue;
-                    }
-                }
+                let i_trim = i.trim().replace("\"", "");
+                downloader(i_trim);
             }
-        } else if msg.content == "<@927882552046399538> ping" {
+        } else if msg.content == "<@1096476929915359323> ping" {
             if let Err(why) = msg.channel_id.say(&ctx.http, "pong!").await {
                 println!("Error: {:?}", why)
             }
-        } else if msg.content == "<@927882552046399538>" {
+        } else if msg.content == "<@1096476929915359323>" {
             if let Err(why) = msg.channel_id.say(&ctx.http, "commands: index, ping").await {
                 println!("Error: {}", why);
             }
@@ -76,8 +67,8 @@ impl EventHandler for Handler {
     }
 }
 
-async fn index_messages(channel_id: ChannelId, ctx: &Context) -> String {
-    let mut messages = MessagesIter::<Http>::stream(&ctx, channel_id).boxed();
+async fn _index_messages(channel_id: ChannelId, ctx: &Context) -> String {
+    let mut messages = channel_id.messages_iter(&ctx).boxed();
 
     let mut s = String::new();
 
@@ -92,6 +83,79 @@ async fn index_messages(channel_id: ChannelId, ctx: &Context) -> String {
     }
     s
 }
+
+async fn index_messages2(channel_id: ChannelId, ctx: &Context, msg_id: MessageId) -> String {
+    // start program
+    // -> get current message -> move "up" 100 messages
+    // -> get 100th message -> move "up" 100 messages
+    // repeat until at last message
+    // discord api limits 100/time
+
+    //
+    // get messages
+    //
+
+    let mut attachment_vec = Vec::new();
+    let mut image_vec = Vec::new();
+    let mut message_id = msg_id;
+    loop {
+        let messages = channel_id
+            .messages(&ctx, |retriever| retriever.before(message_id).limit(100))
+            .await
+            .expect("Failed to retrieve messages");
+
+        if messages.is_empty() {
+            break;
+        }
+
+        message_id = messages.last().unwrap().id;
+        for message in messages {
+            // println!("{:?}", message);
+            let has_attachment = message.attachments.iter().any(|a| a.url != "");
+            if has_attachment == true {
+                println!("message {} by {} has an attachment!", message.id, message.author);
+                for attachment in message.attachments {
+                    attachment_vec.push(attachment);
+                }
+            } else {
+                continue;
+            }
+        }
+    }
+
+    //
+    // filter for images
+    //
+
+    for attachment in &attachment_vec {
+        if attachment.content_type.as_ref().map(|s| s == "image/png").unwrap_or(false) {
+            println!("Attachment {} is a PNG image", attachment.id);
+            image_vec.push(attachment);
+        }
+    }
+    let url_string = attachment_vec
+        .iter()
+        .map(|attachment| attachment.url.clone())
+        .collect::<Vec<String>>()
+        .join(", ");
+    println!("url: {}", &url_string);
+    url_string
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 fn downloader(url: String) {
     if let Err(why) = fs::create_dir_all("./download/") {
