@@ -1,19 +1,19 @@
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::time::Instant;
 use std::{env, fs};
 
 use curl::easy::Easy;
-use serenity::{async_trait};
+use serenity::async_trait;
 use serenity::futures::StreamExt;
 
-use serenity::model::prelude::{ChannelId, Message, Ready, MessageId};
+use serenity::model::prelude::{ChannelId, Message, MessageId, Ready};
 use serenity::prelude::*;
 
 struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
-    
     // Set a handler for the `message` event - so that whenever a new message
     // is received - the closure (or function) passed will be called.
     //
@@ -41,7 +41,7 @@ impl EventHandler for Handler {
             {
                 println!("Error: {:?}", why)
             }
-            let index = index_messages2(msg.channel_id, &ctx).await;
+            let index = index_messages2(msg.channel_id, &ctx, msg.into()).await;
             let search_strings = ["https://cdn.discordapp.com", "https://media.discordapp.net"];
             for i in index.split_whitespace() {
                 for string in &search_strings {
@@ -76,7 +76,7 @@ impl EventHandler for Handler {
     }
 }
 
-async fn index_messages(channel_id: ChannelId, ctx: &Context) -> String {
+async fn _index_messages(channel_id: ChannelId, ctx: &Context) -> String {
     let mut messages = channel_id.messages_iter(&ctx).boxed();
 
     let mut s = String::new();
@@ -93,20 +93,31 @@ async fn index_messages(channel_id: ChannelId, ctx: &Context) -> String {
     s
 }
 
-async fn index_messages2(channel_id: ChannelId, ctx: &Context) -> String {
-    let mut s = String::new();
+async fn index_messages2(channel_id: ChannelId, ctx: &Context, msg_id: MessageId) -> String {
+    // start program
+    // -> get current message -> move "up" 100 messages
+    // -> get 100th message -> move "up" 100 messages
+    // repeat until at last message
 
-    let messages = channel_id
-    .messages(&ctx, |retriever| retriever.after(MessageId(958093372176863232)).limit(1000))
-    .await;
-    // if let Err(why) = messages {
-    //     eprintln!("error while reading messages: {why}");
-    // }
+    // discord api limits 100/time
 
-    for i in &messages {
-        dbg!(i);
+    let mut message_id = msg_id;
+    loop {
+        let messages = channel_id
+            .messages(&ctx, |retriever| retriever.before(message_id).limit(100))
+            .await
+            .expect("Failed to retrieve messages");
+
+        if messages.is_empty() {
+            break;
+        }
+
+        message_id = messages.last().unwrap().id;
+        for i in &messages {
+            println!("{:?}", i);
+        }
     }
-    todo!();
+    todo!()
 }
 
 fn downloader(url: String) {
