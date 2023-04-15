@@ -4,7 +4,6 @@ use std::{env, fs};
 
 use serenity::async_trait;
 use serenity::futures::StreamExt;
-use serenity::model::id;
 use serenity::model::prelude::{ChannelId, Message, MessageId, Ready, UserId};
 use serenity::model::user::User;
 use serenity::prelude::*;
@@ -58,7 +57,7 @@ impl EventHandler for Handler {
                 println!("Error: {:?}", why)
             }
             println!("user: {:?}", msg.author);
-        } else if msg.content == "<@1096476929915359323>" {
+        } else if msg.content.contains("<@1096476929915359323>") {
             if let Err(why) = msg.channel_id.say(&ctx.http, "commands: index, ping").await {
                 println!("Error: {}", why);
             }
