@@ -4,9 +4,9 @@ use std::{env, fs};
 
 use serenity::async_trait;
 use serenity::futures::StreamExt;
-
-use serenity::model::prelude::{ChannelId, Message, MessageId, Ready};
-use serenity::model::webhook::WebhookType;
+use serenity::model::id;
+use serenity::model::prelude::{ChannelId, Message, MessageId, Ready, UserId};
+use serenity::model::user::User;
 use serenity::prelude::*;
 
 struct Handler;
@@ -33,22 +33,31 @@ impl EventHandler for Handler {
     // 927882552046399538
     async fn message(&self, ctx: Context, msg: Message) {
         if msg.content == "<@1096476929915359323> index" {
-            if let Err(why) = msg
-                .channel_id
-                .say(&ctx.http, "nachriten auflisten...")
-                .await
-            {
-                println!("Error: {:?}", why)
-            }
-            let index = index_messages2(msg.channel_id, &ctx, msg.into()).await;
-            for i in index.split_whitespace() {
-                let i_trim = i.trim().replace("\"", "");
-                parser(i_trim);
+            match msg.author {
+                User {
+                    id: UserId(292662037300117514),
+                    ..
+                } => {
+                    if let Err(why) = msg.channel_id.say(&ctx.http, "yes okay").await {
+                        println!("Error: {:?}", why)
+                    }
+                    let index = index_messages2(msg.channel_id, &ctx, msg.into()).await;
+                    for i in index.split_whitespace() {
+                        let i_trim = i.trim().replace("\"", "");
+                        parser(i_trim.replace(",", ""));
+                    }
+                }
+                _ => {
+                    if let Err(why) = msg.channel_id.say(&ctx, "nö").await {
+                        println!("error: {}", why);
+                    }
+                }
             }
         } else if msg.content == "<@1096476929915359323> ping" {
             if let Err(why) = msg.channel_id.say(&ctx.http, "pong!").await {
                 println!("Error: {:?}", why)
             }
+            println!("user: {:?}", msg.author);
         } else if msg.content == "<@1096476929915359323>" {
             if let Err(why) = msg.channel_id.say(&ctx.http, "commands: index, ping").await {
                 println!("Error: {}", why);
@@ -116,7 +125,10 @@ async fn index_messages2(channel_id: ChannelId, ctx: &Context, msg_id: MessageId
             // println!("{:?}", message);
             let has_attachment = message.attachments.iter().any(|a| a.url != "");
             if has_attachment == true {
-                println!("message {} by {} has an attachment!", message.id, message.author);
+                println!(
+                    "message {} by {} has an attachment!",
+                    message.id, message.author
+                );
                 for attachment in message.attachments {
                     attachment_vec.push(attachment);
                 }
@@ -131,7 +143,12 @@ async fn index_messages2(channel_id: ChannelId, ctx: &Context, msg_id: MessageId
     //
 
     for attachment in &attachment_vec {
-        if attachment.content_type.as_ref().map(|s| s == "image/png").unwrap_or(false) {
+        if attachment
+            .content_type
+            .as_ref()
+            .map(|s| s == "image/png")
+            .unwrap_or(false)
+        {
             println!("Attachment {} is a PNG image", attachment.id);
             image_vec.push(attachment);
         }
