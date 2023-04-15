@@ -6,6 +6,7 @@ use serenity::async_trait;
 use serenity::futures::StreamExt;
 
 use serenity::model::prelude::{ChannelId, Message, MessageId, Ready};
+use serenity::model::webhook::WebhookType;
 use serenity::prelude::*;
 
 struct Handler;
@@ -40,10 +41,9 @@ impl EventHandler for Handler {
                 println!("Error: {:?}", why)
             }
             let index = index_messages2(msg.channel_id, &ctx, msg.into()).await;
-            let search_strings = ["https://cdn.discordapp.com", "https://media.discordapp.net"];
             for i in index.split_whitespace() {
                 let i_trim = i.trim().replace("\"", "");
-                downloader(i_trim);
+                parser(i_trim);
             }
         } else if msg.content == "<@1096476929915359323> ping" {
             if let Err(why) = msg.channel_id.say(&ctx.http, "pong!").await {
@@ -53,6 +53,9 @@ impl EventHandler for Handler {
             if let Err(why) = msg.channel_id.say(&ctx.http, "commands: index, ping").await {
                 println!("Error: {}", why);
             }
+        } else if msg.content == "<@1096476929915359323> firstmessage" {
+            let small = firstmessage(&ctx, msg.channel_id);
+            todo!();
         }
     }
 
@@ -142,22 +145,7 @@ async fn index_messages2(channel_id: ChannelId, ctx: &Context, msg_id: MessageId
     url_string
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-fn downloader(url: String) {
+fn parser(url: String) {
     if let Err(why) = fs::create_dir_all("./download/") {
         eprintln!("error creating file: {}", why);
     }
@@ -170,6 +158,10 @@ fn downloader(url: String) {
     if let Err(why) = writeln!(file, "{url}") {
         eprintln!("error while writing to file: {}", why);
     }
+}
+
+async fn firstmessage(ctx: &Context, channel_id: ChannelId) -> String {
+    todo!();
 }
 
 #[tokio::main]
