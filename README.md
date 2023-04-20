@@ -2,14 +2,14 @@
 
 ## description
 
-hiermit kann man einfach die nachrichten in einem kanal mit `@mention index` indexieren (?)
+Index images in channel with a simple command and save the links to a file.
 
 ## commands
 
 ```
 @mention            help command
 @mention ping       ping
-@mention index      indexen des kanals, in dem der command geschrieben wurde
+@mention index      index images in given channel
 ```
 
 ## dependencies
