@@ -5,8 +5,10 @@ use std::{env, fs};
 use serenity::async_trait;
 use serenity::futures::StreamExt;
 use serenity::model::prelude::{ChannelId, Message, MessageId, Ready, UserId};
+use serenity::model::{timestamp, Timestamp};
 use serenity::model::user::User;
 use serenity::prelude::*;
+use serenity::utils::Content;
 
 struct Handler;
 
@@ -57,13 +59,17 @@ impl EventHandler for Handler {
                 println!("Error: {:?}", why)
             }
             println!("user: {:?}", msg.author);
+        } else if msg.content == ("<@1096476929915359323> fm") {
+            println!("command recieved");
+            firstmessage(&ctx, msg.channel_id, msg.id).await;
         } else if msg.content.contains("<@1096476929915359323>") {
-            if let Err(why) = msg.channel_id.say(&ctx.http, "commands: index, ping").await {
+            if let Err(why) = msg
+                .channel_id
+                .say(&ctx.http, "commands: index, ping, fm")
+                .await
+            {
                 println!("Error: {}", why);
             }
-        } else if msg.content == "<@1096476929915359323> firstmessage" {
-            let small = firstmessage(&ctx, msg.channel_id);
-            todo!();
         }
     }
 
@@ -161,6 +167,28 @@ async fn index_messages2(channel_id: ChannelId, ctx: &Context, msg_id: MessageId
     url_string
 }
 
+async fn firstmessage(ctx: &Context, channel_id: ChannelId, msg_id: MessageId) {
+    let current_message = channel_id.message(&ctx.http, msg_id).await.expect("error getting current message");
+    let current_message_time = current_message.timestamp;
+    let mut time_keeper = current_message_time;
+    loop {
+        let messages = channel_id
+            .messages(&ctx, |retriever| retriever.before(msg_id).limit(100))
+            .await
+            .expect("Failed to retrieve messages");
+
+        for message in messages.iter().rev() {
+            let date = message.timestamp;
+            dbg!(date);
+            if time_keeper > date {
+                time_keeper = date;
+            } else {
+                dbg!(date);
+            }
+        }
+    }
+}
+
 fn parser(url: String) {
     if let Err(why) = fs::create_dir_all("./download/") {
         eprintln!("error creating file: {}", why);
@@ -174,10 +202,6 @@ fn parser(url: String) {
     if let Err(why) = writeln!(file, "{url}") {
         eprintln!("error while writing to file: {}", why);
     }
-}
-
-async fn firstmessage(ctx: &Context, channel_id: ChannelId) -> String {
-    todo!();
 }
 
 #[tokio::main]
