@@ -1,35 +1,43 @@
+mod commands;
+
 use std::fs::OpenOptions;
 use std::io::Write;
+
 use std::{env, fs};
 
 use serenity::async_trait;
 use serenity::futures::StreamExt;
-use serenity::model::prelude::{ChannelId, Message, MessageId, Ready, UserId};
-use serenity::model::{timestamp, Timestamp};
+use serenity::model::prelude::{ChannelId, Message, MessageId, Ready, UserId, Interaction, InteractionResponseType, GuildId};
+use serenity::model::{timestamp, Timestamp, guild};
 use serenity::model::user::User;
 use serenity::prelude::*;
-use serenity::utils::Content;
+
 
 struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
-    // Set a handler for the `message` event - so that whenever a new message
-    // is received - the closure (or function) passed will be called.
-    //
-    // Event handlers are dispatched through a threadpool, and so multiple
-    // events can be dispatched simultaneously.
-    // async fn message(&self, ctx: Context, msg: Message) {
-    //     if msg.content == "!ping" {
-    //         // Sending a message can fail, due to a network error, an
-    //         // authentication error, or lack of permissions to post in the
-    //         // channel, so log to stdout when some error happens, with a
-    //         // description of it.
-    //         if let Err(why) = msg.channel_id.say(&ctx.http, "pong!").await {
-    //             println!("Error sending message: {:?}", why);
-    //         }
-    //     }
-    // }
+    async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
+        if let Interaction::ApplicationCommand(command) = interaction {
+            println!("Received command interaction: {:#?}", command);
+
+            let content = match command.data.name.as_str() {
+                "index" => "test".to_string(), // command handling?
+                _ => "not implemented :(".to_string(),
+            };
+
+            if let Err(why) = command
+                .create_interaction_response(&ctx.http, |response| {
+                    response
+                        .kind(InteractionResponseType::ChannelMessageWithSource)
+                        .interaction_response_data(|message| message.content(content))
+                })
+                .await
+            {
+                println!("Cannot respond to slash command: {}", why);
+            }
+        }
+    }
 
     // 927882552046399538
     async fn message(&self, ctx: Context, msg: Message) {
@@ -73,32 +81,22 @@ impl EventHandler for Handler {
         }
     }
 
-    // Set a handler to be called on the `ready` event. This is called when a
-    // shard is booted, and a READY payload is sent by Discord. This payload
-    // contains data like the current user's guild Ids, current user data,
-    // private channels, and more.
-    //
-    // In this case, just print what the current user's username is.
-    async fn ready(&self, _: Context, ready: Ready) {
+    async fn ready(&self, ctx: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
+        
+        let guild_id = GuildId(
+            env::var("GUILD_ID")
+                .expect("Expected GUILD_ID in environment")
+                .parse()
+                .expect("GUILD_ID must be an integer"),
+        );
+        // register global command
+        let _index_command = serenity::model::application::command::Command::create_global_application_command(&ctx.http, |command| { // full mod path required idk?
+            commands::index::register(command)
+        }).await;
+
+        // register command for autofill?
     }
-}
-
-async fn _index_messages(channel_id: ChannelId, ctx: &Context) -> String {
-    let mut messages = channel_id.messages_iter(&ctx).boxed();
-
-    let mut s = String::new();
-
-    while let Some(message_result) = messages.next().await {
-        match message_result {
-            Ok(message) => {
-                let line = format!("{} said \"{}\" ", message.author.name, message.content);
-                s.push_str(&line);
-            }
-            Err(error) => eprintln!("Uh oh! Error: {}", error),
-        }
-    }
-    s
 }
 
 async fn index_messages2(channel_id: ChannelId, ctx: &Context, msg_id: MessageId) -> String {
@@ -177,13 +175,17 @@ async fn firstmessage(ctx: &Context, channel_id: ChannelId, msg_id: MessageId) {
             .await
             .expect("Failed to retrieve messages");
 
+            // 1099428229024075887 -> 1.
+            // 1099428266886058116 -> 2.
+            // 1099428296644628571 -> 3.
+
         for message in messages.iter().rev() {
             let date = message.timestamp;
-            dbg!(date);
+            // dbg!(date);
             if time_keeper > date {
                 time_keeper = date;
             } else {
-                dbg!(date);
+                // dbg!(date);
             }
         }
     }
