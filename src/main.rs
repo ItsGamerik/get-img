@@ -4,27 +4,29 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::{env, fs};
 
+use serenity::builder::{EditInteractionResponse, CreateInteractionResponse};
 use serenity::{async_trait, model};
 // use serenity::futures::StreamExt;
-use serenity::model::prelude::{
-    ChannelId, Message, MessageId, Ready, UserId,
-};
+use serenity::model::prelude::{ChannelId, Message, MessageId, Ready};
 
-use serenity::model::user::User;
 use serenity::prelude::*;
 
 struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn interaction_create(&self, ctx: Context, interaction: model::application::interaction::Interaction) {
-        if let model::application::interaction::Interaction::ApplicationCommand(command) = interaction {
+    async fn interaction_create(
+        &self,
+        ctx: Context,
+        interaction: model::application::interaction::Interaction,
+    ) {
+        if let model::application::interaction::Interaction::ApplicationCommand(command) =
+            interaction
+        {
             println!("Received command interaction");
-            // dbg!(interaction);
-
             let content = match command.data.name.as_str() {
-                "index" => commands::index::run(&command.data.options), // command handling?
-                _ => "gibts nicht".to_string(),
+                "index" => commands::index::run(&command.data.options, &ctx).await, // command handling?
+                _ => String::from("test"),
             };
 
             if let Err(why) = command
@@ -42,39 +44,39 @@ impl EventHandler for Handler {
 
     // 927882552046399538
     async fn message(&self, ctx: Context, msg: Message) {
-        if msg.content == "<@1096476929915359323> index" {
-            match msg.author {
-                User {
-                    id: UserId(292662037300117514),
-                    ..
-                } => {
-                    if let Err(why) = msg.channel_id.say(&ctx.http, "yes okay").await {
-                        println!("Error: {:?}", why)
-                    }
-                    let index = index_messages2(msg.channel_id, &ctx, msg.into()).await;
-                    for i in index.split_whitespace() {
-                        let i_trim = i.trim().replace("\"", "");
-                        parser(i_trim.replace(",", ""));
-                    }
-                }
-                _ => {
-                    if let Err(why) = msg.channel_id.say(&ctx, "nö").await {
-                        println!("error: {}", why);
-                    }
-                }
-            }
-        } else if msg.content == "<@1096476929915359323> ping" {
-            if let Err(why) = msg.channel_id.say(&ctx.http, "pong!").await {
-                println!("Error: {:?}", why)
-            }
-            println!("user: {:?}", msg.author);
-        } else if msg.content == ("<@1096476929915359323> fm") {
-            println!("command recieved");
-            firstmessage(&ctx, msg.channel_id, msg.id).await;
-        } else if msg.content.contains("<@1096476929915359323>") {
+        // if msg.content == "<@1096476929915359323> index" {
+        //     match msg.author {
+        //         User {
+        //             id: UserId(292662037300117514),
+        //             ..
+        //         } => {
+        //             if let Err(why) = msg.channel_id.say(&ctx.http, "yes okay").await {
+        //                 println!("Error: {:?}", why)
+        //             }
+        //             let index = index_messages2(msg.channel_id, &ctx, msg.into()).await;
+        //             for i in index.split_whitespace() {
+        //                 let i_trim = i.trim().replace("\"", "");
+        //                 parser(i_trim.replace(",", ""));
+        //             }
+        //         }
+        //         _ => {
+        //             if let Err(why) = msg.channel_id.say(&ctx, "nö").await {
+        //                 println!("error: {}", why);
+        //             }
+        //         }
+        //     }
+        // } else if msg.content == "<@1096476929915359323> ping" {
+        //     if let Err(why) = msg.channel_id.say(&ctx.http, "pong!").await {
+        //         println!("Error: {:?}", why)
+        //     }
+        //     println!("user: {:?}", msg.author);
+        // } else if msg.content == ("<@1096476929915359323> fm") {
+        //     println!("command recieved");
+        //     firstmessage(&ctx, msg.channel_id, msg.id).await; }
+        if msg.content.contains("<@1096476929915359323>") {
             if let Err(why) = msg
                 .channel_id
-                .say(&ctx.http, "commands: index, ping, fm")
+                .say(&ctx.http, "legacy command system, use slash commands")
                 .await
             {
                 println!("Error: {}", why);
@@ -226,7 +228,6 @@ async fn main() {
         .event_handler(Handler)
         .await
         .expect("Err creating client");
-
     // Finally, start a single shard, and start listening to events.
     //
     // Shards will automatically attempt to reconnect, and will perform
