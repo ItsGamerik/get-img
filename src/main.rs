@@ -4,7 +4,6 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::{env, fs};
 
-use serenity::builder::{EditInteractionResponse, CreateInteractionResponse};
 use serenity::{async_trait, model};
 // use serenity::futures::StreamExt;
 use serenity::model::prelude::{ChannelId, Message, MessageId, Ready};
@@ -102,7 +101,7 @@ impl EventHandler for Handler {
     }
 }
 
-async fn index_messages2(channel_id: ChannelId, ctx: &Context, msg_id: MessageId) -> String {
+async fn _index_messages2(channel_id: ChannelId, ctx: &Context, msg_id: MessageId) -> String {
     // start program
     // -> get current message -> move "up" 100 messages
     // -> get 100th message -> move "up" 100 messages
@@ -168,7 +167,7 @@ async fn index_messages2(channel_id: ChannelId, ctx: &Context, msg_id: MessageId
     url_string
 }
 
-async fn firstmessage(ctx: &Context, channel_id: ChannelId, msg_id: MessageId) {
+async fn _firstmessage(ctx: &Context, channel_id: ChannelId, msg_id: MessageId) {
     let current_message = channel_id
         .message(&ctx.http, msg_id)
         .await
@@ -197,7 +196,7 @@ async fn firstmessage(ctx: &Context, channel_id: ChannelId, msg_id: MessageId) {
     }
 }
 
-fn parser(url: String) {
+fn _parser(url: String) {
     if let Err(why) = fs::create_dir_all("./download/") {
         eprintln!("error creating file: {}", why);
     }

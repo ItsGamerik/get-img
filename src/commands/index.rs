@@ -4,9 +4,7 @@ use serenity::{
     model::prelude::{
         interaction::{
             application_command::{CommandDataOption, CommandDataOptionValue},
-            Interaction,
-        },
-        MessageId, PartialChannel,
+        }, PartialChannel,
     },
     prelude::Context,
 };
@@ -27,7 +25,7 @@ pub async fn run(options: &[CommandDataOption], ctx: &Context) -> String {
             "der ausgewählte kanal ist: {}",
             channel.name.as_ref().unwrap()
         );
-        message_index(&ctx, channel);
+        message_index(&ctx, channel).await;
     } else {
         response = "no channel id given".to_string();
     }
