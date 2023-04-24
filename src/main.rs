@@ -2,34 +2,35 @@ mod commands;
 
 use std::fs::OpenOptions;
 use std::io::Write;
-
 use std::{env, fs};
 
-use serenity::async_trait;
-use serenity::futures::StreamExt;
-use serenity::model::prelude::{ChannelId, Message, MessageId, Ready, UserId, Interaction, InteractionResponseType, GuildId};
-use serenity::model::{timestamp, Timestamp, guild};
+use serenity::{async_trait, model};
+// use serenity::futures::StreamExt;
+use serenity::model::prelude::{
+    ChannelId, Message, MessageId, Ready, UserId,
+};
+
 use serenity::model::user::User;
 use serenity::prelude::*;
-
 
 struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
-        if let Interaction::ApplicationCommand(command) = interaction {
-            println!("Received command interaction: {:#?}", command);
+    async fn interaction_create(&self, ctx: Context, interaction: model::application::interaction::Interaction) {
+        if let model::application::interaction::Interaction::ApplicationCommand(command) = interaction {
+            println!("Received command interaction");
+            // dbg!(interaction);
 
             let content = match command.data.name.as_str() {
-                "index" => "test".to_string(), // command handling?
-                _ => "not implemented :(".to_string(),
+                "index" => commands::index::run(&command.data.options), // command handling?
+                _ => "gibts nicht".to_string(),
             };
 
             if let Err(why) = command
                 .create_interaction_response(&ctx.http, |response| {
                     response
-                        .kind(InteractionResponseType::ChannelMessageWithSource)
+                        .kind(model::application::interaction::InteractionResponseType::ChannelMessageWithSource)
                         .interaction_response_data(|message| message.content(content))
                 })
                 .await
@@ -83,17 +84,17 @@ impl EventHandler for Handler {
 
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
-        
-        let guild_id = GuildId(
-            env::var("GUILD_ID")
-                .expect("Expected GUILD_ID in environment")
-                .parse()
-                .expect("GUILD_ID must be an integer"),
-        );
+
         // register global command
-        let _index_command = serenity::model::application::command::Command::create_global_application_command(&ctx.http, |command| { // full mod path required idk?
-            commands::index::register(command)
-        }).await;
+        let _index_command =
+            serenity::model::application::command::Command::create_global_application_command(
+                &ctx.http,
+                |command: &mut serenity::builder::CreateApplicationCommand| {
+                    // full mod path required idk?
+                    commands::index::register(command)
+                },
+            )
+            .await;
 
         // register command for autofill?
     }
@@ -166,7 +167,10 @@ async fn index_messages2(channel_id: ChannelId, ctx: &Context, msg_id: MessageId
 }
 
 async fn firstmessage(ctx: &Context, channel_id: ChannelId, msg_id: MessageId) {
-    let current_message = channel_id.message(&ctx.http, msg_id).await.expect("error getting current message");
+    let current_message = channel_id
+        .message(&ctx.http, msg_id)
+        .await
+        .expect("error getting current message");
     let current_message_time = current_message.timestamp;
     let mut time_keeper = current_message_time;
     loop {
@@ -175,9 +179,9 @@ async fn firstmessage(ctx: &Context, channel_id: ChannelId, msg_id: MessageId) {
             .await
             .expect("Failed to retrieve messages");
 
-            // 1099428229024075887 -> 1.
-            // 1099428266886058116 -> 2.
-            // 1099428296644628571 -> 3.
+        // 1099428229024075887 -> 1.
+        // 1099428266886058116 -> 2.
+        // 1099428296644628571 -> 3.
 
         for message in messages.iter().rev() {
             let date = message.timestamp;
