@@ -19,7 +19,6 @@ pub async fn run(options: &[CommandDataOption], ctx: &Context) -> String {
         .expect("user object");
 
     // response logic
-    let mut response = String::new();
     if let CommandDataOptionValue::Channel(channel) = option {
         response = format!(
             "der ausgewählte kanal ist: {}",

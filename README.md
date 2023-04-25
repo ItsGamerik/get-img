@@ -7,9 +7,8 @@ Index images in channel with a simple command and save the links to a file.
 ## commands
 
 ```
-@mention            help command
-@mention ping       ping
-@mention index      index images in given channel
+/index      index every message with an attachment in a channel
+@mention    legacy command system, not supported.
 ```
 
 ## dependencies
