@@ -4,7 +4,7 @@
 
 ## description
 
-Index images in channel with a simple command and save the links to a file.
+Index images in a discord channel with a simple command and save the links to a file.
 
 ## commands
 
