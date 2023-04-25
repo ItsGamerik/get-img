@@ -1,9 +1,8 @@
 use serenity::{
     builder::CreateApplicationCommand,
-    futures::StreamExt,
     model::prelude::{
         interaction::application_command::{CommandDataOption, CommandDataOptionValue},
-        MessageActivity, PartialChannel,
+        PartialChannel,
     },
     prelude::Context,
 };
@@ -38,11 +37,65 @@ async fn message_index(ctx: &Context, channel: &PartialChannel) {
         .await
         .expect("could not retrieve message");
     let the_message_from_a_message = a_message.last().unwrap();
-    let the_message_id = the_message_from_a_message.id; // LETS GOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+    let the_message_id = the_message_from_a_message.id; // ein wenig XDDDDDD
 
-    // rebuild "old" iterator from here? 
-    
+    // rebuild "old" iterator from here?
+
+    let mut attachment_vec = Vec::new();
+    let mut image_vec = Vec::new();
+    let mut message_id = the_message_id;
+    loop {
+        let messages = channel
+            .id
+            .messages(&ctx, |retriever| retriever.before(message_id).limit(100))
+            .await
+            .expect("Failed to retrieve messages");
+
+        if messages.is_empty() {
+            break;
+        }
+
+        message_id = messages.last().unwrap().id;
+        for message in messages {
+            // println!("{:?}", message);
+            let has_attachment = message.attachments.iter().any(|a| a.url != "");
+            if has_attachment == true {
+                println!(
+                    "message {} by {} has an attachment! it was uploaded: {}",
+                    message.id, message.author, message.timestamp
+                );
+                for attachment in message.attachments {
+                    attachment_vec.push(attachment);
+                }
+            } else {
+                continue;
+            }
+        }
+    }
+
+    //
+    // filter for images
+    //
+
+    for attachment in &attachment_vec {
+        if attachment
+            .content_type
+            .as_ref()
+            .map(|s| s == "image/png")
+            .unwrap_or(false)
+        {
+            // println!("Attachment {} is a PNG image", attachment.id);
+            image_vec.push(attachment);
+        }
+    }
+    let url_string = attachment_vec
+        .iter()
+        .map(|attachment| attachment.url.clone())
+        .collect::<Vec<String>>()
+        .join(", ");
+    println!("url: {}", &url_string);
 }
+
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
         .name("index")
