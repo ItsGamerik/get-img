@@ -1,3 +1,6 @@
+use std::fs::{OpenOptions, self};
+use std::io::Write;
+
 use serenity::{
     builder::CreateApplicationCommand,
     model::prelude::{
@@ -94,6 +97,25 @@ async fn message_index(ctx: &Context, channel: &PartialChannel) {
         .collect::<Vec<String>>()
         .join(", ");
     println!("url: {}", &url_string);
+    for i in attachment_vec.iter().map(|attachment| attachment.url.clone()) {
+        parse(i).await;
+    }
+
+}
+
+async fn parse(url: String) {
+    if let Err(why) = fs::create_dir_all("./download/") {
+        eprintln!("error creating file: {}", why);
+    }
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(true)
+        .open("./download/output.txt")
+        .unwrap();
+    if let Err(why) = writeln!(file, "{url}") {
+        eprintln!("error while writing to file: {}", why);
+    }
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
