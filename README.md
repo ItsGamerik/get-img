@@ -13,7 +13,14 @@ Index images in a discord channel with a simple command and save the links to a 
 @mention    legacy command system, not supported.
 ```
 
-## dependencies
+## usage
+
+just use `cargo`:
+```
+cargo build --release && cargo run --release
+```
+
+### dependencies
 
 - serenity
 - tokio
