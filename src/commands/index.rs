@@ -2,9 +2,8 @@ use serenity::{
     builder::CreateApplicationCommand,
     futures::StreamExt,
     model::prelude::{
-        interaction::{
-            application_command::{CommandDataOption, CommandDataOptionValue},
-        }, PartialChannel,
+        interaction::application_command::{CommandDataOption, CommandDataOptionValue},
+        MessageActivity, PartialChannel,
     },
     prelude::Context,
 };
@@ -33,21 +32,17 @@ pub async fn run(options: &[CommandDataOption], ctx: &Context) -> String {
 }
 
 async fn message_index(ctx: &Context, channel: &PartialChannel) {
-    loop {
-        let mut messages = channel.id.messages_iter(&ctx).boxed();
-        while let Some(message_result) = messages.next().await {
-            match message_result {
-                Ok(message) => println!(
-                    "message indexed: id {}, timestamp {}",
-                    message.id, message.timestamp
-                ),
-                Err(error) => eprintln!("error XD: {}", error),
-            }
-        
-        }
-    }
-}
+    let a_message = channel
+        .id
+        .messages(&ctx, |retriever| retriever.limit(1))
+        .await
+        .expect("could not retrieve message");
+    let the_message_from_a_message = a_message.last().unwrap();
+    let the_message_id = the_message_from_a_message.id; // LETS GOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 
+    // rebuild "old" iterator from here? 
+    
+}
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
         .name("index")
