@@ -1,14 +1,10 @@
 mod commands;
 
-use std::fs::OpenOptions;
-use std::io::Write;
-use std::{env, fs};
+use std::env;
 
-use serenity::{async_trait, model};
-// use serenity::futures::StreamExt;
-use serenity::model::prelude::{ChannelId, Message, MessageId, Ready};
-
+use serenity::model::prelude::{Message, Ready, GuildId};
 use serenity::prelude::*;
+use serenity::{async_trait, model};
 
 struct Handler;
 
@@ -24,8 +20,12 @@ impl EventHandler for Handler {
         {
             println!("Received command interaction");
             let content = match command.data.name.as_str() {
-                "index" => commands::index::run(&command.data.options, &ctx).await, // command handling?
+                "index" => commands::index::run(&command.data.options, &ctx).await,
+                "info" => commands::info::run(&command.data.options, &ctx).await,
                 _ => String::from("test"),
+                // api ref for discord interactions
+                // https://discord.com/developers/docs/interactions/application-commands
+                // https://discord.com/developers/docs/reference
             };
 
             if let Err(why) = command
@@ -41,37 +41,7 @@ impl EventHandler for Handler {
         }
     }
 
-    // 927882552046399538
     async fn message(&self, ctx: Context, msg: Message) {
-        // if msg.content == "<@1096476929915359323> index" {
-        //     match msg.author {
-        //         User {
-        //             id: UserId(292662037300117514),
-        //             ..
-        //         } => {
-        //             if let Err(why) = msg.channel_id.say(&ctx.http, "yes okay").await {
-        //                 println!("Error: {:?}", why)
-        //             }
-        //             let index = index_messages2(msg.channel_id, &ctx, msg.into()).await;
-        //             for i in index.split_whitespace() {
-        //                 let i_trim = i.trim().replace("\"", "");
-        //                 parser(i_trim.replace(",", ""));
-        //             }
-        //         }
-        //         _ => {
-        //             if let Err(why) = msg.channel_id.say(&ctx, "nö").await {
-        //                 println!("error: {}", why);
-        //             }
-        //         }
-        //     }
-        // } else if msg.content == "<@1096476929915359323> ping" {
-        //     if let Err(why) = msg.channel_id.say(&ctx.http, "pong!").await {
-        //         println!("Error: {:?}", why)
-        //     }
-        //     println!("user: {:?}", msg.author);
-        // } else if msg.content == ("<@1096476929915359323> fm") {
-        //     println!("command recieved");
-        //     firstmessage(&ctx, msg.channel_id, msg.id).await; }
         if msg.content.contains("<@1096476929915359323>") {
             if let Err(why) = msg
                 .channel_id
@@ -86,18 +56,39 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
 
-        // register global command
-        let _index_command =
-            serenity::model::application::command::Command::create_global_application_command(
-                &ctx.http,
-                |command: &mut serenity::builder::CreateApplicationCommand| {
-                    // full mod path required idk?
-                    commands::index::register(command)
-                },
-            )
-            .await;
+        // register global command, takes long to propagate through discord/api
+        // let _index_command =
+        //     serenity::model::application::command::Command::create_global_application_command(
+        //         &ctx.http,
+        //         |command: &mut serenity::builder::CreateApplicationCommand| {
+        //             commands::index::register(command)
+        //         },
+        //     )
+        //     .await;
 
-        // register command for autofill?
+        // let _commands =
+        //     serenity::model::application::command::Command::create_global_application_command(
+        //         &ctx.http,
+        //         |command: &mut serenity::builder::CreateApplicationCommand| commands::info::register(command),
+        //     )
+        //     .await;
+
+        // register guild-specific command, does not take as long to update
+        
+        let guild_id = GuildId(
+            env::var("GUILD_ID")
+                .expect("guild id expected")
+                .parse()
+                .expect("guild id has to be a valid integer"),
+        // 927882809006235658
+        );
+
+        let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
+            commands
+                .create_application_command(|command| commands::index::register(command))
+                .create_application_command(|command| commands::info::register(command))
+        });
+
     }
 }
 
@@ -110,17 +101,11 @@ async fn main() {
         | GatewayIntents::DIRECT_MESSAGES
         | GatewayIntents::MESSAGE_CONTENT;
 
-    // Create a new instance of the Client, logging in as a bot. This will
-    // automatically prepend your bot token with "Bot ", which is a requirement
-    // by Discord for bot users.
     let mut client = Client::builder(&token, intents)
         .event_handler(Handler)
         .await
         .expect("Err creating client");
-    // Finally, start a single shard, and start listening to events.
-    //
-    // Shards will automatically attempt to reconnect, and will perform
-    // exponential backoff until it reconnects.
+
     if let Err(why) = client.start().await {
         println!("Client error: {:?}", why);
     }
