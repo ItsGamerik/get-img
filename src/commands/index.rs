@@ -1,4 +1,4 @@
-use std::fs::{OpenOptions, self};
+use std::fs::{self, OpenOptions};
 use std::io::Write;
 
 use serenity::{
@@ -14,13 +14,13 @@ pub async fn run(options: &[CommandDataOption], ctx: &Context) -> String {
     // get option
     let option = options
         .get(0)
-        .expect("option")
+        .expect("expected option")
         .resolved
         .as_ref()
         .expect("user object");
 
     // response logic
-    let mut response = String::new();
+    let mut response: String = String::new();
     if let CommandDataOptionValue::Channel(channel) = option {
         response = format!(
             "der ausgewählte kanal ist: {}",
@@ -91,16 +91,12 @@ async fn message_index(ctx: &Context, channel: &PartialChannel) {
             image_vec.push(attachment);
         }
     }
-    let url_string = attachment_vec
+    for i in attachment_vec
         .iter()
         .map(|attachment| attachment.url.clone())
-        .collect::<Vec<String>>()
-        .join(", ");
-    println!("url: {}", &url_string);
-    for i in attachment_vec.iter().map(|attachment| attachment.url.clone()) {
+    {
         parse(i).await;
     }
-
 }
 
 async fn parse(url: String) {
