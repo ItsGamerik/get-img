@@ -1,21 +1,19 @@
 use serenity::{
     builder::CreateApplicationCommand,
     model::prelude::{
-        self,
-        command::{CommandOptionChoice, CommandOptionType},
+        command::{CommandOptionType},
         interaction::application_command::CommandDataOption,
     },
     prelude::Context,
-    utils::Content,
 };
 
 pub async fn run(options: &[CommandDataOption], ctx: &Context) -> String {
-    let option = options
-        .get(0)
-        .expect("user option expected")
-        .resolved
-        .as_ref()
-        .expect("reference");
+    // let option = options
+    //     .get(0)
+    //     .expect("user option expected")
+    //     .resolved
+    //     .as_ref()
+    //     .expect("reference");
 
     // combine channel id and message id to retrieve message
 
@@ -28,7 +26,7 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         .description("get message information")
         .create_option(|option| {
             option
-                .name("message id")
+                .name("id") // MAN KANN NICHT EIN LEERZEICHEN BENUTZEN
                 .description("a message id")
                 .kind(CommandOptionType::Number)
                 .required(true)

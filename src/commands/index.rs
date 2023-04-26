@@ -120,7 +120,7 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         .description("index slash command")
         .create_option(|option| {
             option
-                .name("channel id")
+                .name("id") // MAN KANN NICHT EIN LEERZEICHEN BENUTZEN
                 .description("channel id of target channel")
                 .kind(serenity::model::prelude::command::CommandOptionType::Channel)
                 .required(true)

@@ -2,7 +2,7 @@ mod commands;
 
 use std::env;
 
-use serenity::model::prelude::{Message, Ready, GuildId};
+use serenity::model::prelude::{GuildId, Message, Ready};
 use serenity::prelude::*;
 use serenity::{async_trait, model};
 
@@ -74,21 +74,22 @@ impl EventHandler for Handler {
         //     .await;
 
         // register guild-specific command, does not take as long to update
-        
+
         let guild_id = GuildId(
             env::var("GUILD_ID")
                 .expect("guild id expected")
                 .parse()
                 .expect("guild id has to be a valid integer"),
-        // 927882809006235658
+            // 927882809006235658
         );
 
-        let _commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
+        let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
             commands
                 .create_application_command(|command| commands::index::register(command))
                 .create_application_command(|command| commands::info::register(command))
-        });
-
+        })
+        .await;
+        dbg!(commands);
     }
 }
 
