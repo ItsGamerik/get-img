@@ -1,8 +1,7 @@
 use serenity::{
     builder::CreateApplicationCommand,
     model::prelude::{
-        command::{CommandOptionType},
-        interaction::application_command::CommandDataOption,
+        command::CommandOptionType, interaction::application_command::CommandDataOption,
     },
     prelude::Context,
 };
@@ -26,7 +25,7 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         .description("get message information")
         .create_option(|option| {
             option
-                .name("id") // MAN KANN NICHT EIN LEERZEICHEN BENUTZEN
+                .name("id")
                 .description("a message id")
                 .kind(CommandOptionType::Number)
                 .required(true)

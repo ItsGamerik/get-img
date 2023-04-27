@@ -22,6 +22,7 @@ impl EventHandler for Handler {
             let content = match command.data.name.as_str() {
                 "index" => commands::index::run(&command.data.options, &ctx).await,
                 "info" => commands::info::run(&command.data.options, &ctx).await,
+                "hello" => commands::hello::run().await,
                 _ => String::from("test"),
                 // api ref for discord interactions
                 // https://discord.com/developers/docs/interactions/application-commands
@@ -56,23 +57,6 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
 
-        // register global command, takes long to propagate through discord/api
-        // let _index_command =
-        //     serenity::model::application::command::Command::create_global_application_command(
-        //         &ctx.http,
-        //         |command: &mut serenity::builder::CreateApplicationCommand| {
-        //             commands::index::register(command)
-        //         },
-        //     )
-        //     .await;
-
-        // let _commands =
-        //     serenity::model::application::command::Command::create_global_application_command(
-        //         &ctx.http,
-        //         |command: &mut serenity::builder::CreateApplicationCommand| commands::info::register(command),
-        //     )
-        //     .await;
-
         // register guild-specific command, does not take as long to update
 
         let guild_id = GuildId(
@@ -80,16 +64,26 @@ impl EventHandler for Handler {
                 .expect("guild id expected")
                 .parse()
                 .expect("guild id has to be a valid integer"),
-            // 927882809006235658
+            // 927882809006235658 (testserver id)
         );
 
         let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
             commands
                 .create_application_command(|command| commands::index::register(command))
                 .create_application_command(|command| commands::info::register(command))
+                .create_application_command(|command| commands::hello::register(command))
         })
         .await;
-        dbg!(commands);
+        println!("guild commands created: {:#?}", commands);
+
+
+        // global command
+
+        let global_hello = serenity::model::application::command::Command::create_global_application_command(
+            &ctx.http,
+            |command| commands::hello::register(command)
+        ).await;
+        println!("registered global command: {:#?}", global_hello);
     }
 }
 
