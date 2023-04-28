@@ -27,9 +27,8 @@ pub async fn run() -> String {
         "Hei",
     ];
 
-    let mut rng  = rand::thread_rng();
-    let rnum: usize = rng.gen_range(0..21); // BE VERY CAREFUL TO USE CORRECT ARRAY LEN
-    let selection = greetings[rnum].to_string();
+    let rng  = rand::thread_rng().gen_range(0..21); // BE VERY CAREFUL TO USE CORRECT ARRAY LEN
+    let selection = greetings[rng].to_string();
     selection
 }
 
