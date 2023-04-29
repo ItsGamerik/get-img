@@ -1,4 +1,5 @@
 mod commands;
+mod ai;
 
 use std::env;
 
@@ -46,11 +47,12 @@ impl EventHandler for Handler {
         if msg.content.contains("<@1096476929915359323>") {
             if let Err(why) = msg
                 .channel_id
-                .say(&ctx.http, "legacy command system, use slash commands")
+                .say(&ctx.http, "jep")
                 .await
             {
                 println!("Error: {}", why);
             }
+            ai::ai::message_responder();
         }
     }
 
@@ -89,6 +91,7 @@ impl EventHandler for Handler {
 
 #[tokio::main]
 async fn main() {
+    ai::ai::message_responder().await;
     // Configure the client with your Discord bot token in the environment.
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
     // Set gateway intents, which decides what events the bot will be notified about
