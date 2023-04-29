@@ -45,14 +45,19 @@ impl EventHandler for Handler {
 
     async fn message(&self, ctx: Context, msg: Message) {
         if msg.content.contains("<@1096476929915359323>") {
-            if let Err(why) = msg
-                .channel_id
-                .say(&ctx.http, "jep")
-                .await
-            {
-                println!("Error: {}", why);
+            let response = ai::ai::message_responder(&msg).await;
+
+            if let Err(e) = msg.channel_id.say(&ctx.http, response).await {
+                println!("error: {}", e)
             }
-            ai::ai::message_responder();
+
+            // if let Err(why) = msg
+            //     .channel_id
+            //     .say(&ctx.http, "jep")
+            //     .await
+            // {
+            //     println!("Error: {}", why);
+            // }
         }
     }
 
@@ -91,7 +96,6 @@ impl EventHandler for Handler {
 
 #[tokio::main]
 async fn main() {
-    ai::ai::message_responder().await;
     // Configure the client with your Discord bot token in the environment.
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
     // Set gateway intents, which decides what events the bot will be notified about

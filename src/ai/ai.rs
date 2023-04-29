@@ -1,5 +1,6 @@
+use regex::Regex;
 use serde::{Serialize, Deserialize};
-use serenity::futures::future::UnwrapOrElse;
+use serenity::model::prelude::Message;
 
 // struct for making api requests to https://github.com/oobabooga/text-generation-webui
 // there seems to be no real documentation
@@ -25,10 +26,23 @@ struct Request {
     add_bos_token: bool,
 }
 
-pub async fn message_responder() {
 
+#[derive(Debug, Deserialize, Serialize)]
+struct InnerObject {
+    text: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct OuterObject {
+    results: Vec<InnerObject>,
+}
+pub async fn message_responder(msg: &Message) -> String {
+    let messge_content = msg.content.to_string();
+    let re = Regex::new("<.*>").unwrap();
+    let cleaned = re.replace_all(&messge_content, "").to_string();
+    println!("new prompt detected: {}", &cleaned);
     let request1 =  Request {
-        prompt: "this is a string".to_string(),
+        prompt: cleaned,
         max_new_tokens: 200,
         do_sample: false,
         temperature: 0.99,
@@ -46,17 +60,24 @@ pub async fn message_responder() {
         add_bos_token: true
     };
     let request_body = serde_json::to_string(&request1).unwrap();
-    dbg!("dings: {}", &request_body);
-    request(request_body).await.unwrap();
+    let response_data = request(request_body).await;
+    let outer_object: OuterObject = match serde_json::from_str(&response_data) {
+        Ok(text) => text,
+        Err(e) => panic!("another error occured: {}", e),
+    };
+    println!("{:?}", outer_object);
+    let text = outer_object.results[0].text.clone();
+    text
 }
 
-async fn request(body: String) -> Result<String, reqwest::Error> {
+async fn request(body: String) -> String {
     let client = reqwest::Client::new();
-    let url = "http://127.0.0.1:5000/api/v1/generate"; // url for the text generation model
-
-    let response = client.post(url).body(body).send().await?;
-    dbg!(&response);
-    let text = response.text().await?;
-    dbg!(&text);
-    Ok(text)
+    let url = "http://127.0.0.1:5000/api/v1/generate"; // url for the text generation model api
+    let response = match client.post(url).body(body).send().await {
+        Ok(response) => response,
+        Err(e) => panic!("an error occured: {}", e),
+    };
+    // dbg!(&response);
+    let text = response.text().await.unwrap();
+    text
 }
