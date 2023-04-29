@@ -1,5 +1,5 @@
 use regex::Regex;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serenity::model::prelude::Message;
 
 // struct for making api requests to https://github.com/oobabooga/text-generation-webui
@@ -25,7 +25,6 @@ struct Request {
     add_bos_token: bool,
 }
 
-
 #[derive(Debug, Deserialize, Serialize)]
 struct InnerObject {
     text: String,
@@ -41,7 +40,7 @@ pub async fn message_responder(msg: &Message) -> String {
     let re = Regex::new("<.*>").unwrap();
     let cleaned = re.replace_all(&messge_content, "").to_string();
     println!("new prompt detected: {}", &cleaned);
-    let request1 =  Request {
+    let request1 = Request {
         prompt: cleaned,
         max_new_tokens: 50,
         do_sample: false,
@@ -57,7 +56,7 @@ pub async fn message_responder(msg: &Message) -> String {
         length_penalty: 1,
         no_repeat_ngram_size: 1,
         seed: 1106436159,
-        add_bos_token: true
+        add_bos_token: true,
     };
     let request_body = serde_json::to_string(&request1).unwrap();
     let response_data = request(request_body).await;

@@ -1,13 +1,13 @@
-mod commands;
 mod ai;
+mod commands;
 
 use std::env;
 use std::sync::Arc;
 
-use serenity::http::{Typing, Http};
+use serenity::http::{Http, Typing};
 use serenity::model::prelude::{GuildId, Message, Ready};
-use serenity::{prelude::*, http};
 use serenity::{async_trait, model};
+use serenity::{prelude::*};
 
 struct Handler;
 
@@ -47,18 +47,28 @@ impl EventHandler for Handler {
 
     async fn message(&self, ctx: Context, msg: Message) {
         if msg.content.contains("<@1096476929915359323>") {
+            let channel_id = msg.channel_id;
+            let channel = channel_id.to_channel(&ctx).await.expect("channel expected");
             if msg.is_private() {
                 println!("message attempt in DMs");
-                if let Err(e) = msg.reply(&ctx.http, "keine nachrichten in den DMs pls").await {
+                if let Err(e) = msg
+                    .reply(&ctx.http, "keine nachrichten in den DMs pls")
+                    .await
+                {
+                    println!("error: {}", e)
+                }
+            } else if channel.is_nsfw() == false {
+                if let Err(e) = msg.reply(&ctx.http, "nicht in diesem kanal, nsfw kanal erforderlich").await {
                     println!("error: {}", e)
                 }
             } else {
                 let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
                 let http = Http::new(&token);
-                let typing = Typing::start(Arc::new(http), msg.channel_id.into()).expect("could not start typing");
+                let typing = Typing::start(Arc::new(http), msg.channel_id.into())
+                    .expect("could not start typing");
                 let response = ai::ai_chat::message_responder(&msg).await;
                 typing.stop().expect("could not stop typing");
-    
+
                 if let Err(e) = msg.reply(&ctx.http, response).await {
                     println!("error: {}", e)
                 }
@@ -88,13 +98,14 @@ impl EventHandler for Handler {
         .await;
         println!("guild commands created: {:#?}", commands);
 
-
         // global command
 
-        let global_hello = serenity::model::application::command::Command::create_global_application_command(
-            &ctx.http,
-            |command| commands::hello::register(command)
-        ).await;
+        let global_hello =
+            serenity::model::application::command::Command::create_global_application_command(
+                &ctx.http,
+                |command| commands::hello::register(command),
+            )
+            .await;
         println!("registered global command: {:#?}", global_hello);
     }
 }
