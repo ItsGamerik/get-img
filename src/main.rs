@@ -2,9 +2,11 @@ mod commands;
 mod ai;
 
 use std::env;
+use std::sync::Arc;
 
+use serenity::http::{Typing, Http};
 use serenity::model::prelude::{GuildId, Message, Ready};
-use serenity::prelude::*;
+use serenity::{prelude::*, http};
 use serenity::{async_trait, model};
 
 struct Handler;
@@ -45,9 +47,13 @@ impl EventHandler for Handler {
 
     async fn message(&self, ctx: Context, msg: Message) {
         if msg.content.contains("<@1096476929915359323>") {
+            let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+            let http = Http::new(&token);
+            let typing = Typing::start(Arc::new(http), msg.channel_id.into()).expect("could not start typing");
             let response = ai::ai::message_responder(&msg).await;
+            typing.stop().expect("could not stop typing");
 
-            if let Err(e) = msg.channel_id.say(&ctx.http, response).await {
+            if let Err(e) = msg.reply(&ctx.http, response).await {
                 println!("error: {}", e)
             }
         }
