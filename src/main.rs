@@ -50,14 +50,6 @@ impl EventHandler for Handler {
             if let Err(e) = msg.channel_id.say(&ctx.http, response).await {
                 println!("error: {}", e)
             }
-
-            // if let Err(why) = msg
-            //     .channel_id
-            //     .say(&ctx.http, "jep")
-            //     .await
-            // {
-            //     println!("Error: {}", why);
-            // }
         }
     }
 

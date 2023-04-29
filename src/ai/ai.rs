@@ -21,7 +21,6 @@ struct Request {
     min_length: i32,
     length_penalty: i32,
     no_repeat_ngram_size: i32,
-    // early_stopping: bool,
     seed: i32,
     add_bos_token: bool,
 }
