@@ -47,14 +47,21 @@ impl EventHandler for Handler {
 
     async fn message(&self, ctx: Context, msg: Message) {
         if msg.content.contains("<@1096476929915359323>") {
-            let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
-            let http = Http::new(&token);
-            let typing = Typing::start(Arc::new(http), msg.channel_id.into()).expect("could not start typing");
-            let response = ai::ai::message_responder(&msg).await;
-            typing.stop().expect("could not stop typing");
-
-            if let Err(e) = msg.reply(&ctx.http, response).await {
-                println!("error: {}", e)
+            if msg.is_private() {
+                println!("message attempt in DMs");
+                if let Err(e) = msg.reply(&ctx.http, "keine nachrichten in den DMs pls").await {
+                    println!("error: {}", e)
+                }
+            } else {
+                let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+                let http = Http::new(&token);
+                let typing = Typing::start(Arc::new(http), msg.channel_id.into()).expect("could not start typing");
+                let response = ai::ai_chat::message_responder(&msg).await;
+                typing.stop().expect("could not stop typing");
+    
+                if let Err(e) = msg.reply(&ctx.http, response).await {
+                    println!("error: {}", e)
+                }
             }
         }
     }

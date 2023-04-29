@@ -36,13 +36,14 @@ struct OuterObject {
     results: Vec<InnerObject>,
 }
 pub async fn message_responder(msg: &Message) -> String {
+    // facebook_opt-1.3b it is XD
     let messge_content = msg.content.to_string();
     let re = Regex::new("<.*>").unwrap();
     let cleaned = re.replace_all(&messge_content, "").to_string();
     println!("new prompt detected: {}", &cleaned);
     let request1 =  Request {
         prompt: cleaned,
-        max_new_tokens: 200,
+        max_new_tokens: 50,
         do_sample: false,
         temperature: 0.99,
         top_p: 0.9,
@@ -55,7 +56,7 @@ pub async fn message_responder(msg: &Message) -> String {
         min_length: 0,
         length_penalty: 1,
         no_repeat_ngram_size: 1,
-        seed: -1,
+        seed: 1106436159,
         add_bos_token: true
     };
     let request_body = serde_json::to_string(&request1).unwrap();
