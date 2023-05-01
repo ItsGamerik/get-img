@@ -42,7 +42,7 @@ pub async fn message_responder(msg: &Message) -> String {
     println!("new prompt detected: {}", &cleaned);
     let request1 = Request {
         prompt: cleaned,
-        max_new_tokens: 50,
+        max_new_tokens: 100,
         do_sample: false,
         temperature: 0.99,
         top_p: 0.9,
@@ -55,7 +55,7 @@ pub async fn message_responder(msg: &Message) -> String {
         min_length: 0,
         length_penalty: 1,
         no_repeat_ngram_size: 1,
-        seed: 1106436159,
+        seed: -1, // 1106436159
         add_bos_token: true,
     };
     let request_body = serde_json::to_string(&request1).unwrap();
