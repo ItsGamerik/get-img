@@ -6,8 +6,8 @@ use std::sync::Arc;
 
 use serenity::http::{Http, Typing};
 use serenity::model::prelude::{GuildId, Message, Ready};
+use serenity::prelude::*;
 use serenity::{async_trait, model};
-use serenity::{prelude::*};
 
 struct Handler;
 
@@ -26,7 +26,8 @@ impl EventHandler for Handler {
                 "index" => commands::index::run(&command.data.options, &ctx).await,
                 "info" => commands::info::run(&command.data.options, &ctx).await,
                 "hello" => commands::hello::run().await,
-                _ => String::from("test"),
+                "render" => commands::asciirender::run(&command).await,
+                _ => String::from("no command"),
                 // api ref for discord interactions
                 // https://discord.com/developers/docs/interactions/application-commands
                 // https://discord.com/developers/docs/reference
@@ -58,7 +59,10 @@ impl EventHandler for Handler {
                     println!("error: {}", e)
                 }
             } else if channel.is_nsfw() == false {
-                if let Err(e) = msg.reply(&ctx.http, "nicht in diesem kanal, nsfw kanal erforderlich").await {
+                if let Err(e) = msg
+                    .reply(&ctx.http, "nicht in diesem kanal, nsfw kanal erforderlich")
+                    .await
+                {
                     println!("error: {}", e)
                 }
             } else {
@@ -103,10 +107,16 @@ impl EventHandler for Handler {
         let global_hello =
             serenity::model::application::command::Command::create_global_application_command(
                 &ctx.http,
-                |command| commands::hello::register(command),
+                |command| commands::hello::register(command)
+                
             )
             .await;
+        let global_render = serenity::model::application::command::Command::create_global_application_command(
+            &ctx.http,
+            |command| commands::asciirender::register(command),
+        ).await;
         println!("registered global command: {:#?}", global_hello);
+        println!("registered global command: {:#?}", global_render);
     }
 }
 
