@@ -6,7 +6,7 @@ use serenity::{
     prelude::Context,
 };
 
-pub async fn run(options: &[CommandDataOption], ctx: &Context) -> String {
+pub async fn run(_options: &[CommandDataOption], _ctx: &Context) -> String {
     // let option = options
     //     .get(0)
     //     .expect("user option expected")
