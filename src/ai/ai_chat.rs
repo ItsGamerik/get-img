@@ -1,3 +1,5 @@
+use std::net::TcpStream;
+
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serenity::model::prelude::Message;
@@ -35,6 +37,12 @@ struct OuterObject {
     results: Vec<InnerObject>,
 }
 pub async fn message_responder(msg: &Message) -> String {
+    if check_port_online().await == false {
+        let error = "webserver port is not reachable!".to_string();
+        println!("{}", error);
+        return error;
+        
+    }
     // facebook_opt-1.3b it is XD
     let messge_content = msg.content.to_string();
     let re = Regex::new("<.*>").unwrap();
@@ -67,6 +75,13 @@ pub async fn message_responder(msg: &Message) -> String {
     println!("{:?}", outer_object);
     let text = outer_object.results[0].text.clone();
     text
+}
+
+async fn check_port_online() -> bool {
+    match TcpStream::connect(("localhost", 5000)) {
+        Ok(_) => true,
+        Err(_) => false,
+    }
 }
 
 async fn request(body: String) -> String {
