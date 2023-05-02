@@ -107,14 +107,15 @@ impl EventHandler for Handler {
         let global_hello =
             serenity::model::application::command::Command::create_global_application_command(
                 &ctx.http,
-                |command| commands::hello::register(command)
-                
+                |command| commands::hello::register(command),
             )
             .await;
-        let global_render = serenity::model::application::command::Command::create_global_application_command(
-            &ctx.http,
-            |command| commands::asciirender::register(command),
-        ).await;
+        let global_render =
+            serenity::model::application::command::Command::create_global_application_command(
+                &ctx.http,
+                |command| commands::asciirender::register(command),
+            )
+            .await;
         println!("registered global command: {:#?}", global_hello);
         println!("registered global command: {:#?}", global_render);
     }

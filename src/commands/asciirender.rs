@@ -1,18 +1,26 @@
 use regex::Regex;
 use serenity::{
     builder::CreateApplicationCommand,
-    model::prelude::{interaction::application_command::CommandDataOptionValue, application_command::ApplicationCommandInteraction},
+    model::prelude::{
+        application_command::ApplicationCommandInteraction,
+        interaction::application_command::CommandDataOptionValue,
+    },
 };
 
-pub async fn run(commands: &ApplicationCommandInteraction) -> String { // knowing what this does helps a lot
-    let az = commands.data.options
+pub async fn run(commands: &ApplicationCommandInteraction) -> String {
+    // knowing what this does helps a lot
+    let az = commands
+        .data
+        .options
         .get(0)
         .expect("expected valid azimuth")
         .resolved
         .as_ref()
         .expect("expected user object");
     let al = commands
-        .data.options.get(1)
+        .data
+        .options
+        .get(1)
         .expect("expected valid altitude")
         .resolved
         .as_ref()
@@ -54,7 +62,8 @@ fn command_runner(az_f64: f64, al_f64: f64) -> std::process::Output {
     render_cube
 }
 
-fn regex(output: String) -> String { // sad attempt at fixing rendering
+fn regex(output: String) -> String {
+    // sad attempt at fixing rendering
     let regex_exc = Regex::new(r"([!])").unwrap();
     let regex_hash = Regex::new(r"([#])").unwrap();
     let regex_ap = Regex::new(r"(['])").unwrap();
