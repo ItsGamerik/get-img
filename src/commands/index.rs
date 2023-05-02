@@ -1,6 +1,10 @@
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 
+use rand::seq::index;
+use regex::Regex;
+use serenity::model::prelude::command::{Command, CommandOptionType};
+use serenity::model::prelude::{Message, Attachment};
 use serenity::{
     builder::CreateApplicationCommand,
     model::prelude::{
@@ -26,14 +30,14 @@ pub async fn run(options: &[CommandDataOption], ctx: &Context) -> String {
             "der ausgewählte kanal ist: {}",
             channel.name.as_ref().unwrap()
         );
-        message_index(&ctx, channel).await;
+        index(&ctx, channel, options).await;
     } else {
         response = "no channel id given".to_string();
     }
     response
 }
 
-async fn message_index(ctx: &Context, channel: &PartialChannel) {
+async fn index(ctx: &Context, channel: &PartialChannel, opt: &[CommandDataOption]) {
     let a_message = channel
         .id
         .messages(&ctx, |retriever| retriever.limit(1))
@@ -44,8 +48,6 @@ async fn message_index(ctx: &Context, channel: &PartialChannel) {
 
     // rebuild "old" iterator from here?
 
-    let mut attachment_vec = Vec::new();
-    let mut image_vec = Vec::new();
     let mut message_id = the_message_id;
     loop {
         let messages = channel
@@ -59,19 +61,19 @@ async fn message_index(ctx: &Context, channel: &PartialChannel) {
         }
 
         message_id = messages.last().unwrap().id;
-        for message in messages {
-            // println!("{:?}", message);
-            let has_attachment = message.attachments.iter().any(|a| a.url != "");
-            if has_attachment == true {
-                println!(
-                    "message {} by {} has an attachment! it was uploaded: {}",
-                    message.id, message.author, message.timestamp
-                );
-                for attachment in message.attachments {
-                    attachment_vec.push(attachment);
-                }
-            } else {
-                continue;
+        let index_switch = opt
+            .get(1)
+            .expect("expected user option")
+            .resolved
+            .as_ref()
+            .expect("user object");
+        dbg!(index_switch);
+        if let CommandDataOptionValue::Boolean(true) = index_switch {
+            index_images(messages).await;
+        } else if let CommandDataOptionValue::Boolean(false) = index_switch {
+            for message in messages {
+                let content = message.content;
+                parse(content).await;
             }
         }
     }
@@ -79,7 +81,29 @@ async fn message_index(ctx: &Context, channel: &PartialChannel) {
     //
     // filter for images
     //
+}
 
+async fn index_images(messages: Vec<Message>) {
+    let mut attachment_vec: Vec<Attachment> = Vec::new();
+    let mut link_vec: Vec<String> = Vec::new();
+    let mut image_vec: Vec<&Attachment> = Vec::new();
+    for message in messages {
+        // println!("{:?}", message);
+        let has_attachment = message.attachments.iter().any(|a| a.url != "");
+        if has_attachment == true {
+            println!(
+                "message {} by {} has an attachment! it was uploaded: {}",
+                message.id, message.author, message.timestamp
+            );
+            for attachment in message.attachments {
+                attachment_vec.push(attachment);
+            }
+        } else if message.content.contains("cdn.discordapp.com") {
+            link_vec.push(message.content);
+        } else {
+            continue;
+        }
+    }
     for attachment in &attachment_vec {
         if attachment
             .content_type
@@ -95,11 +119,14 @@ async fn message_index(ctx: &Context, channel: &PartialChannel) {
         .iter()
         .map(|attachment| attachment.url.clone())
     {
+        link_vec.push(i);
+    }
+    for i in link_vec {
         parse(i).await;
     }
 }
 
-async fn parse(url: String) {
+async fn parse(content: String) {
     if let Err(why) = fs::create_dir_all("./download/") {
         eprintln!("error creating file: {}", why);
     }
@@ -109,7 +136,7 @@ async fn parse(url: String) {
         .append(true)
         .open("./download/output.txt")
         .unwrap();
-    if let Err(why) = writeln!(file, "{url}") {
+    if let Err(why) = writeln!(file, "{content}") {
         eprintln!("error while writing to file: {}", why);
     }
 }
@@ -117,12 +144,19 @@ async fn parse(url: String) {
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
         .name("index")
-        .description("index slash command")
+        .description("index images or messages in channel")
         .create_option(|option| {
             option
                 .name("id") // MAN KANN NICHT EIN LEERZEICHEN BENUTZEN
                 .description("channel id of target channel")
                 .kind(serenity::model::prelude::command::CommandOptionType::Channel)
+                .required(true)
+        })
+        .create_option(|option| {
+            option
+                .name("only_images")
+                .description("wether or not to index every message instead of simply the images")
+                .kind(serenity::model::prelude::command::CommandOptionType::Boolean)
                 .required(true)
         })
 }
