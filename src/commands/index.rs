@@ -1,9 +1,7 @@
+
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 
-use rand::seq::index;
-use regex::Regex;
-use serenity::model::prelude::command::{Command, CommandOptionType};
 use serenity::model::prelude::{Message, Attachment};
 use serenity::{
     builder::CreateApplicationCommand,
@@ -67,20 +65,20 @@ async fn index(ctx: &Context, channel: &PartialChannel, opt: &[CommandDataOption
             .resolved
             .as_ref()
             .expect("user object");
-        dbg!(index_switch);
         if let CommandDataOptionValue::Boolean(true) = index_switch {
             index_images(messages).await;
         } else if let CommandDataOptionValue::Boolean(false) = index_switch {
-            for message in messages {
-                let content = message.content;
-                parse(content).await;
-            }
+            index_all_messages(messages).await;
         }
     }
+}
 
-    //
-    // filter for images
-    //
+async fn index_all_messages(messages: Vec<Message>) {
+    for message in messages {
+        let content = message.content;
+        let msg_string = format!("{} said [{}]", message.author, content);
+        parse(msg_string).await;
+    }
 }
 
 async fn index_images(messages: Vec<Message>) {
