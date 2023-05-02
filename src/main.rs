@@ -4,6 +4,7 @@ mod commands;
 use std::env;
 use std::sync::Arc;
 
+use commands::asciirender;
 use serenity::http::{Http, Typing};
 use serenity::model::prelude::{GuildId, Message, Ready};
 use serenity::prelude::*;
@@ -98,6 +99,7 @@ impl EventHandler for Handler {
                 .create_application_command(|command| commands::index::register(command))
                 .create_application_command(|command| commands::info::register(command))
                 .create_application_command(|command| commands::hello::register(command))
+                .create_application_command(|command| commands::asciirender::register(command))
         })
         .await;
         println!("guild commands created: {:#?}", commands);
@@ -110,14 +112,14 @@ impl EventHandler for Handler {
                 |command| commands::hello::register(command),
             )
             .await;
-        let global_render =
+        let global_index =
             serenity::model::application::command::Command::create_global_application_command(
                 &ctx.http,
-                |command| commands::asciirender::register(command),
+                |command| commands::index::register(command),
             )
             .await;
         println!("registered global command: {:#?}", global_hello);
-        println!("registered global command: {:#?}", global_render);
+        println!("registered global command: {:#?}", global_index);
     }
 }
 
