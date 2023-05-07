@@ -42,19 +42,19 @@ pub async fn run(commands: &ApplicationCommandInteraction) -> String {
     dbg!(String::from_utf8(render_cube.stderr).expect("utf8")); // brain completely exploded
     let output = String::from_utf8(render_cube.stdout).expect("invalid utf8");
     dbg!(&output);
-    let clean3 = regex(output);
+    
     //  let channel_id = commands.channel_id; // lmao, tried using "Interaction" struct the entire time
-    clean3
+    regex(output)
 }
 
 fn command_runner(az_f64: f64, al_f64: f64) -> std::process::Output {
     let render_cube = std::process::Command::new("./render/3d-ascii-viewer")
-        .arg("./render/cube2.obj".to_string())
+        .arg("./render/cube2.obj")
         .arg("-w")
         .arg("44")
         .arg("-h")
         .arg("44")
-        .arg("--snap".to_string())
+        .arg("--snap")
         .arg(az_f64.to_string())
         .arg(al_f64.to_string())
         .output()

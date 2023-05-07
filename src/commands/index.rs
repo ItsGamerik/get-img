@@ -28,7 +28,7 @@ pub async fn run(options: &[CommandDataOption], ctx: &Context) -> String {
             "der ausgewählte kanal ist: {}",
             channel.name.as_ref().unwrap()
         );
-        index(&ctx, channel, options).await;
+        index(ctx, channel, options).await;
     } else {
         response = "no channel id given".to_string();
     }
@@ -87,8 +87,8 @@ async fn index_images(messages: Vec<Message>) {
     let mut image_vec: Vec<&Attachment> = Vec::new();
     for message in messages {
         // println!("{:?}", message);
-        let has_attachment = message.attachments.iter().any(|a| a.url != "");
-        if has_attachment == true {
+        let has_attachment = message.attachments.iter().any(|a| !a.url.is_empty());
+        if has_attachment {
             println!(
                 "message {} by {} has an attachment! it was uploaded: {}",
                 message.id, message.author, message.timestamp

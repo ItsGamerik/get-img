@@ -37,10 +37,10 @@ struct OuterObject {
     results: Vec<InnerObject>,
 }
 pub async fn message_responder(msg: &Message) -> String {
-    if check_port_online().await == false {
+    if !(check_port_online().await) {
         let error = "webserver port is not reachable!".to_string();
         println!("{}", error);
-        return error;
+        error
         
     } else {
     // facebook_opt-1.3b it is XD
@@ -73,8 +73,8 @@ pub async fn message_responder(msg: &Message) -> String {
         Err(e) => panic!("another error occured: {}", e),
     };
     println!("{:?}", outer_object);
-    let text = outer_object.results[0].text.clone();
-    text
+    
+    outer_object.results[0].text.clone()
     }
 }
 
@@ -93,6 +93,6 @@ async fn request(body: String) -> String {
         Err(e) => panic!("an error occured: {}", e),
     };
     // dbg!(&response);
-    let text = response.text().await.unwrap();
-    text
+    
+    response.text().await.unwrap()
 }

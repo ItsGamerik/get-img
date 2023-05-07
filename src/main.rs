@@ -58,7 +58,7 @@ impl EventHandler for Handler {
                 {
                     println!("error: {}", e)
                 }
-            } else if channel.is_nsfw() == false {
+            } else if !channel.is_nsfw() {
                 if let Err(e) = msg
                     .reply(&ctx.http, "nicht in diesem kanal, nsfw kanal erforderlich")
                     .await
