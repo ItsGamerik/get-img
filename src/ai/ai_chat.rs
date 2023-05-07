@@ -42,7 +42,7 @@ pub async fn message_responder(msg: &Message) -> String {
         println!("{}", error);
         return error;
         
-    }
+    } else {
     // facebook_opt-1.3b it is XD
     let messge_content = msg.content.to_string();
     let re = Regex::new("<.*>").unwrap();
@@ -75,6 +75,7 @@ pub async fn message_responder(msg: &Message) -> String {
     println!("{:?}", outer_object);
     let text = outer_object.results[0].text.clone();
     text
+    }
 }
 
 async fn check_port_online() -> bool {

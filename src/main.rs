@@ -4,7 +4,6 @@ mod commands;
 use std::env;
 use std::sync::Arc;
 
-use commands::asciirender;
 use serenity::http::{Http, Typing};
 use serenity::model::prelude::{GuildId, Message, Ready};
 use serenity::prelude::*;
