@@ -1,13 +1,4 @@
-
-
-
-use serenity::{
-    builder::CreateApplicationCommand,
-    model::prelude::{
-        application_command::ApplicationCommandInteraction,
-        interaction::application_command::CommandDataOptionValue,
-    },
-};
+use serenity::{model::prelude::interaction::application_command::{ApplicationCommandInteraction, CommandDataOptionValue}, builder::CreateApplicationCommand};
 
 pub async fn run(commands: &ApplicationCommandInteraction) -> String {
     // knowing what this does helps a lot

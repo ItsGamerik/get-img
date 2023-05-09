@@ -22,17 +22,18 @@ pub async fn run(options: &[CommandDataOption], ctx: &Context) -> String {
         .expect("user object");
 
     // response logic
-    let mut response: String = String::new();
+    // let mut response: String = String::new();
     if let CommandDataOptionValue::Channel(channel) = option {
-        response = format!(
+        let response = format!(
             "der ausgewählte kanal ist: {}",
             channel.name.as_ref().unwrap()
         );
         index(ctx, channel, options).await;
+        return response;
     } else {
-        response = "no channel id given".to_string();
+        let response = "no channel id given".to_string();
+        return response;
     }
-    response
 }
 
 async fn index(ctx: &Context, channel: &PartialChannel, opt: &[CommandDataOption]) {
