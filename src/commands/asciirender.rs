@@ -1,4 +1,6 @@
-use regex::Regex;
+
+
+
 use serenity::{
     builder::CreateApplicationCommand,
     model::prelude::{
@@ -41,10 +43,11 @@ pub async fn run(commands: &ApplicationCommandInteraction) -> String {
     let render_cube = command_runner(az_f64, al_f64);
     dbg!(String::from_utf8(render_cube.stderr).expect("utf8")); // brain completely exploded
     let output = String::from_utf8(render_cube.stdout).expect("invalid utf8");
-    dbg!(&output);
-    
+    // use code block to make the cube not look terrible due to the discord font.
+    let output2 = format!("{}", "`".to_string() + &output + "`");
     //  let channel_id = commands.channel_id; // lmao, tried using "Interaction" struct the entire time
-    regex(output)
+    // regex(output)
+    output2
 }
 
 fn command_runner(az_f64: f64, al_f64: f64) -> std::process::Output {
@@ -60,17 +63,6 @@ fn command_runner(az_f64: f64, al_f64: f64) -> std::process::Output {
         .output()
         .expect("failed to start renderer.");
     render_cube
-}
-
-fn regex(output: String) -> String {
-    // sad attempt at fixing rendering
-    let regex_exc = Regex::new(r"([!])").unwrap();
-    let regex_hash = Regex::new(r"([#])").unwrap();
-    let regex_ap = Regex::new(r"(['])").unwrap();
-    let clean1 = regex_exc.replace_all(&output, "⁞").to_string();
-    let clean2 = regex_hash.replace_all(&clean1, "⁍").to_string();
-    let clean3 = regex_ap.replace_all(&clean2, "ª").to_string();
-    clean3
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
