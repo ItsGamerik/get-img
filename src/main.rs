@@ -99,7 +99,7 @@ impl EventHandler for Handler {
                 .create_application_command(|command| commands::index::register(command))
                 .create_application_command(|command| commands::info::register(command))
                 .create_application_command(|command| commands::hello::register(command))
-                .create_application_command(|command| commands::download::register(command))
+                // .create_application_command(|command| commands::download::register(command))
                 .create_application_command(|command| commands::asciirender::register(command))
         })
         .await;
@@ -119,6 +119,12 @@ impl EventHandler for Handler {
                 |command| commands::index::register(command),
             )
             .await;
+        let global_download = serenity::model::application::command::Command::create_global_application_command(
+            &ctx.http,
+            |command| commands::download::register(command),
+        )
+        .await;
+        println!("registered global command: {:#?}", global_download);
         println!("registered global command: {:#?}", global_hello);
         println!("registered global command: {:#?}", global_index);
     }

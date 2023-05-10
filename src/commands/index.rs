@@ -1,7 +1,7 @@
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 
-use serenity::model::prelude::{Attachment, Message};
+use serenity::model::prelude::{Attachment, Message, MessageApplication};
 use serenity::{
     builder::CreateApplicationCommand,
     model::prelude::{
@@ -75,7 +75,7 @@ async fn index(ctx: &Context, channel: &PartialChannel, opt: &[CommandDataOption
 async fn index_all_messages(messages: Vec<Message>) {
     for message in messages {
         let content = message.content;
-        let msg_string = format!("{} said [{}]", message.author, content);
+        let msg_string = format!("{} said [{}] on {}", message.author, content, message.timestamp);
         parse(msg_string).await;
     }
 }
