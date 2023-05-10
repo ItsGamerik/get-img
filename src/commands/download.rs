@@ -6,11 +6,11 @@ use tokio::{
     io::{self, AsyncBufReadExt, AsyncWriteExt},
 };
 
-use serenity::{builder::CreateApplicationCommand, model::Permissions};
+use serenity::{builder::CreateApplicationCommand, model::Permissions, futures::TryFutureExt};
 
 pub async fn run() -> String {
     read_file().await;
-    "test".to_string()
+    "done".to_string()
 }
 
 async fn read_file() {
@@ -23,6 +23,7 @@ async fn read_file() {
             download_file(line).await;
         }
     }
+    fs::remove_file("./download/output.txt").unwrap_or_else(|_| ()).await;
 }
 
 async fn download_file(url: String) {
