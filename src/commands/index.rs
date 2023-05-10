@@ -73,6 +73,16 @@ async fn index(ctx: &Context, channel: &PartialChannel, opt: &[CommandDataOption
 }
 
 async fn index_all_messages(messages: Vec<Message>) {
+    let mut file = OpenOptions::new()
+    .write(true)
+    .create(true)
+    .append(true)
+    .open("./download/output.txt")
+    .unwrap();
+    let header_string = "userid,message,timestamp".to_string();
+    if let Err(e) = writeln!(file, "{header_string}") {
+        eprintln!("error writing to file: {}", e);
+    };
     for message in messages {
         let content = message.content;
         let msg_string = format!("{}, \"{}\",{},", message.author, content, message.timestamp);
@@ -133,10 +143,6 @@ async fn parse(content: String) {
         .append(true)
         .open("./download/output.txt")
         .unwrap();
-    let header_string = "userid,message,timestamp".to_string();
-    if let Err(e) = writeln!(file, "{header_string}") {
-        eprintln!("error writing to file: {}", e);
-    };
     if let Err(why) = writeln!(file, "{content}") {
         eprintln!("error while writing to file: {}", why);
     };
