@@ -26,6 +26,7 @@ impl EventHandler for Handler {
                 "index" => commands::index::run(&command.data.options, &ctx).await,
                 "info" => commands::info::run(&command.data.options, &ctx).await,
                 "hello" => commands::hello::run().await,
+                "download" => commands::download::run().await,
                 "render" => commands::asciirender::run(&command).await,
                 _ => String::from("no command"),
                 // api ref for discord interactions
@@ -98,6 +99,7 @@ impl EventHandler for Handler {
                 .create_application_command(|command| commands::index::register(command))
                 .create_application_command(|command| commands::info::register(command))
                 .create_application_command(|command| commands::hello::register(command))
+                .create_application_command(|command| commands::download::register(command))
                 .create_application_command(|command| commands::asciirender::register(command))
         })
         .await;
