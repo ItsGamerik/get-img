@@ -1,7 +1,7 @@
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 
-use serenity::model::prelude::{Attachment, Message, MessageApplication};
+use serenity::model::prelude::{Attachment, Message};
 use serenity::{
     builder::CreateApplicationCommand,
     model::prelude::{
@@ -75,7 +75,7 @@ async fn index(ctx: &Context, channel: &PartialChannel, opt: &[CommandDataOption
 async fn index_all_messages(messages: Vec<Message>) {
     for message in messages {
         let content = message.content;
-        let msg_string = format!("{} said [{}] on {}", message.author, content, message.timestamp);
+        let msg_string = format!("{}, \"{}\",{},", message.author, content, message.timestamp);
         parse(msg_string).await;
     }
 }
@@ -133,9 +133,13 @@ async fn parse(content: String) {
         .append(true)
         .open("./download/output.txt")
         .unwrap();
+    let header_string = "userid,message,timestamp".to_string();
+    if let Err(e) = writeln!(file, "{header_string}") {
+        eprintln!("error writing to file: {}", e);
+    };
     if let Err(why) = writeln!(file, "{content}") {
         eprintln!("error while writing to file: {}", why);
-    }
+    };
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
