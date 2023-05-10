@@ -1,7 +1,10 @@
 use std::path::PathBuf;
 
 use reqwest::Client;
-use tokio::{fs::{File, self}, io::{AsyncBufReadExt, self, AsyncWriteExt}};
+use tokio::{
+    fs::{self, File},
+    io::{self, AsyncBufReadExt, AsyncWriteExt},
+};
 
 use serenity::{builder::CreateApplicationCommand, model::Permissions};
 
@@ -25,15 +28,32 @@ async fn read_file() {
 async fn download_file(url: String) {
     let client = Client::new();
     let response = client.get(&url).send().await.unwrap();
-    let content_type = response.headers().get("content-type").unwrap().to_str().unwrap();
+    let content_type = response
+        .headers()
+        .get("content-type")
+        .unwrap()
+        .to_str()
+        .unwrap();
     let extension = content_type.split('/').nth(1).unwrap_or("bin");
-    let file_name = PathBuf::from(&url).file_name().unwrap().to_str().unwrap().to_owned() + "." + extension;
+    let file_name = PathBuf::from(&url)
+        .file_name()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_owned()
+        + "."
+        + extension;
     let mut file_path = PathBuf::from("./download/").join(&file_name);
 
     let mut index = 0;
     while file_path.exists() {
         index += 1;
-        let new_file_name = format!("{}-{}.{}", &file_name[..file_name.len() - extension.len() - 1], index, extension);
+        let new_file_name = format!(
+            "{}-{}.{}",
+            &file_name[..file_name.len() - extension.len() - 1],
+            index,
+            extension
+        );
         file_path.set_file_name(new_file_name);
     }
 

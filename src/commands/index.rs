@@ -1,8 +1,7 @@
-
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 
-use serenity::model::prelude::{Message, Attachment};
+use serenity::model::prelude::{Attachment, Message};
 use serenity::{
     builder::CreateApplicationCommand,
     model::prelude::{
@@ -22,7 +21,6 @@ pub async fn run(options: &[CommandDataOption], ctx: &Context) -> String {
         .expect("user object");
 
     // response logic
-    // let mut response: String = String::new();
     if let CommandDataOptionValue::Channel(channel) = option {
         let response = format!(
             "der ausgewählte kanal ist: {}",

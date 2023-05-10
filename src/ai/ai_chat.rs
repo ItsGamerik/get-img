@@ -41,40 +41,39 @@ pub async fn message_responder(msg: &Message) -> String {
         let error = "webserver port is not reachable!".to_string();
         println!("{}", error);
         error
-        
     } else {
-    // facebook_opt-1.3b it is XD
-    let messge_content = msg.content.to_string();
-    let re = Regex::new("<.*>").unwrap();
-    let cleaned = re.replace_all(&messge_content, "").to_string();
-    println!("new prompt detected: {}", &cleaned);
-    let request1 = Request {
-        prompt: cleaned,
-        max_new_tokens: 100,
-        do_sample: false,
-        temperature: 0.99,
-        top_p: 0.9,
-        typical_p: 1,
-        repetition_penalty: 1.1,
-        encoder_repetition_penalty: 1,
-        top_k: 40,
-        num_beams: 1,
-        penalty_alpha: 0,
-        min_length: 0,
-        length_penalty: 1,
-        no_repeat_ngram_size: 1,
-        seed: -1, // 1106436159
-        add_bos_token: true,
-    };
-    let request_body = serde_json::to_string(&request1).unwrap();
-    let response_data = request(request_body).await;
-    let outer_object: OuterObject = match serde_json::from_str(&response_data) {
-        Ok(text) => text,
-        Err(e) => panic!("another error occured: {}", e),
-    };
-    println!("{:?}", outer_object);
-    
-    outer_object.results[0].text.clone()
+        // facebook_opt-1.3b it is XD
+        let messge_content = msg.content.to_string();
+        let re = Regex::new("<.*>").unwrap();
+        let cleaned = re.replace_all(&messge_content, "").to_string();
+        println!("new prompt detected: {}", &cleaned);
+        let request1 = Request {
+            prompt: cleaned,
+            max_new_tokens: 100,
+            do_sample: false,
+            temperature: 0.99,
+            top_p: 0.9,
+            typical_p: 1,
+            repetition_penalty: 1.1,
+            encoder_repetition_penalty: 1,
+            top_k: 40,
+            num_beams: 1,
+            penalty_alpha: 0,
+            min_length: 0,
+            length_penalty: 1,
+            no_repeat_ngram_size: 1,
+            seed: -1, // 1106436159
+            add_bos_token: true,
+        };
+        let request_body = serde_json::to_string(&request1).unwrap();
+        let response_data = request(request_body).await;
+        let outer_object: OuterObject = match serde_json::from_str(&response_data) {
+            Ok(text) => text,
+            Err(e) => panic!("another error occured: {}", e),
+        };
+        println!("{:?}", outer_object);
+
+        outer_object.results[0].text.clone()
     }
 }
 
@@ -93,6 +92,6 @@ async fn request(body: String) -> String {
         Err(e) => panic!("an error occured: {}", e),
     };
     // dbg!(&response);
-    
+
     response.text().await.unwrap()
 }
