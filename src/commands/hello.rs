@@ -13,7 +13,6 @@ pub async fn run() -> String {
         "Konnichiwa",
         "Oi",
         "Anyoung",
-        "Asalaam alaikum",
         "Halløj",
         "Hujambo",
         "Hoi",
@@ -25,6 +24,7 @@ pub async fn run() -> String {
         "Shalom",
         "Tjena",
         "Hei",
+        "As-salamu alaykum",
     ];
 
     let rng = rand::thread_rng().gen_range(0..21); // BE VERY CAREFUL TO USE CORRECT ARRAY LEN
