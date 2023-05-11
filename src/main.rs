@@ -59,7 +59,7 @@ impl EventHandler for Handler {
 
         let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
             commands
-                .create_application_command(|command| commands::index::register(command))
+                // .create_application_command(|command| commands::index::register(command))
                 .create_application_command(|command| commands::hello::register(command))
                 // .create_application_command(|command| commands::download::register(command))
         })
