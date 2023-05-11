@@ -1,11 +1,10 @@
-mod ai;
 mod commands;
 
 use std::env;
-use std::sync::Arc;
 
-use serenity::http::{Http, Typing};
-use serenity::model::prelude::{GuildId, Message, Ready};
+
+
+use serenity::model::prelude::{GuildId, Ready};
 use serenity::prelude::*;
 use serenity::{async_trait, model};
 
@@ -24,10 +23,8 @@ impl EventHandler for Handler {
             println!("Received command interaction");
             let content = match command.data.name.as_str() {
                 "index" => commands::index::run(&command.data.options, &ctx).await,
-                "info" => commands::info::run(&command.data.options, &ctx).await,
                 "hello" => commands::hello::run().await,
                 "download" => commands::download::run().await,
-                "render" => commands::asciirender::run(&command).await,
                 _ => String::from("no command"),
                 // api ref for discord interactions
                 // https://discord.com/developers/docs/interactions/application-commands
@@ -43,40 +40,6 @@ impl EventHandler for Handler {
                 .await
             {
                 println!("Cannot respond to slash command: {}", why);
-            }
-        }
-    }
-
-    async fn message(&self, ctx: Context, msg: Message) {
-        if msg.content.contains("<@1096476929915359323>") {
-            let channel_id = msg.channel_id;
-            let channel = channel_id.to_channel(&ctx).await.expect("channel expected");
-            if msg.is_private() {
-                println!("message attempt in DMs");
-                if let Err(e) = msg
-                    .reply(&ctx.http, "keine nachrichten in den DMs pls")
-                    .await
-                {
-                    println!("error: {}", e)
-                }
-            } else if !channel.is_nsfw() {
-                if let Err(e) = msg
-                    .reply(&ctx.http, "nicht in diesem kanal, nsfw kanal erforderlich")
-                    .await
-                {
-                    println!("error: {}", e)
-                }
-            } else {
-                let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
-                let http = Http::new(&token);
-                let typing = Typing::start(Arc::new(http), msg.channel_id.into())
-                    .expect("could not start typing");
-                let response = ai::ai_chat::message_responder(&msg).await;
-                typing.stop().expect("could not stop typing");
-
-                if let Err(e) = msg.reply(&ctx.http, response).await {
-                    println!("error: {}", e)
-                }
             }
         }
     }
@@ -97,10 +60,8 @@ impl EventHandler for Handler {
         let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
             commands
                 .create_application_command(|command| commands::index::register(command))
-                .create_application_command(|command| commands::info::register(command))
                 .create_application_command(|command| commands::hello::register(command))
                 // .create_application_command(|command| commands::download::register(command))
-                .create_application_command(|command| commands::asciirender::register(command))
         })
         .await;
         println!("guild commands created: {:#?}", commands);
