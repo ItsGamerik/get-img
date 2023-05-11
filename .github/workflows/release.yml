@@ -1,4 +1,4 @@
-name: Build and Release
+name: Release
 
 on:
     push:
@@ -10,7 +10,7 @@ env:
     CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  release:
     runs-on: self-hosted
     steps:
     - name: Checkout code
