@@ -2,8 +2,6 @@ mod commands;
 
 use std::env;
 
-
-
 use serenity::model::prelude::{GuildId, Ready};
 use serenity::prelude::*;
 use serenity::{async_trait, model};
@@ -66,7 +64,7 @@ impl EventHandler for Handler {
         .await;
         println!("guild commands created: {:#?}", commands);
 
-        // global command
+        // global command registering
 
         let global_hello =
             serenity::model::application::command::Command::create_global_application_command(

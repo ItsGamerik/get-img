@@ -11,8 +11,8 @@ use serenity::{
     prelude::Context,
 };
 
+// run the command
 pub async fn run(options: &[CommandDataOption], ctx: &Context) -> String {
-    // get option
     let option = options
         .get(0)
         .expect("expected option")
@@ -20,7 +20,6 @@ pub async fn run(options: &[CommandDataOption], ctx: &Context) -> String {
         .as_ref()
         .expect("user object");
 
-    // response logic
     if let CommandDataOptionValue::Channel(channel) = option {
         let response = format!(
             "der ausgewählte kanal ist: {}",
@@ -34,22 +33,19 @@ pub async fn run(options: &[CommandDataOption], ctx: &Context) -> String {
     }
 }
 
+// used to index the selected channel depending on wether or not "only_images" is true or false
 async fn index(ctx: &Context, channel: &PartialChannel, opt: &[CommandDataOption]) {
-    let a_message = channel
+    let message_vector = channel
         .id
         .messages(&ctx, |retriever| retriever.limit(1))
         .await
         .expect("could not retrieve message");
-    let the_message_from_a_message = a_message.last().unwrap();
-    let the_message_id = the_message_from_a_message.id; // ein wenig XDDDDDD
-
-    // rebuild "old" iterator from here?
-
-    let mut message_id = the_message_id;
+    let single_message: &Message = message_vector.last().unwrap();
+    let mut single_message_id = single_message.id;
     loop {
         let messages = channel
             .id
-            .messages(&ctx, |retriever| retriever.before(message_id).limit(100))
+            .messages(&ctx, |retriever| retriever.before(single_message_id).limit(100))
             .await
             .expect("Failed to retrieve messages");
 
@@ -57,7 +53,9 @@ async fn index(ctx: &Context, channel: &PartialChannel, opt: &[CommandDataOption
             break;
         }
 
-        message_id = messages.last().unwrap().id;
+
+        // try to iterate "upwards" in the channel
+        single_message_id = messages.last().unwrap().id;
         let index_switch = opt
             .get(1)
             .expect("expected user option")
@@ -72,6 +70,8 @@ async fn index(ctx: &Context, channel: &PartialChannel, opt: &[CommandDataOption
     }
 }
 
+
+// dont index attachments
 async fn index_all_messages(messages: Vec<Message>) {
     let mut file = OpenOptions::new()
     .write(true)
@@ -90,6 +90,7 @@ async fn index_all_messages(messages: Vec<Message>) {
     }
 }
 
+// ONLY index attachments
 async fn index_images(messages: Vec<Message>) {
     let mut attachment_vec: Vec<Attachment> = Vec::new();
     let mut link_vec: Vec<String> = Vec::new();
@@ -133,6 +134,7 @@ async fn index_images(messages: Vec<Message>) {
     }
 }
 
+// parse the messages/attachments to the file "output.txt"
 async fn parse(content: String) {
     if let Err(why) = fs::create_dir_all("./download/") {
         eprintln!("error creating file: {}", why);

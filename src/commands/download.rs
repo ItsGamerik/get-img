@@ -13,6 +13,7 @@ pub async fn run() -> String {
     "done".to_string()
 }
 
+// read the urls from the file "output.txt"
 async fn read_file() {
     let file = File::open("./download/output.txt").await.unwrap();
     let mut lines = io::BufReader::new(file).lines();
@@ -26,6 +27,7 @@ async fn read_file() {
     fs::remove_file("./download/output.txt").unwrap_or_else(|_| ()).await;
 }
 
+// use Reqwest crate to download the url from cdn.discord.com or whatever with the file name and extension of the original file.
 async fn download_file(url: String) {
     let client = Client::new();
     let response = client.get(&url).send().await.unwrap();
