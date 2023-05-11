@@ -1,6 +1,6 @@
 # get-img: Discord image indexer
 
-[![build](https://github.com/ItsGamerik/get-img/actions/workflows/rust.yml/badge.svg)](https://github.com/ItsGamerik/get-img/actions)
+[![Build and test](https://github.com/ItsGamerik/get-img/actions/workflows/build.yml/badge.svg)](https://github.com/ItsGamerik/get-img/actions/workflows/build.yml)
 
 ## description
 
