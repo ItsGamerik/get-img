@@ -6,11 +6,18 @@ use tokio::{
     io::{self, AsyncBufReadExt, AsyncWriteExt},
 };
 
-use serenity::{builder::CreateApplicationCommand, model::Permissions, futures::TryFutureExt};
+use serenity::{builder::CreateApplicationCommand, model::{Permissions, prelude::interaction::{application_command::ApplicationCommandInteraction, InteractionResponseType}}, futures::TryFutureExt, prelude::Context};
 
-pub async fn run() -> String {
+pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
+    interaction.create_interaction_response(&ctx.http, |response| {
+        response.kind(InteractionResponseType::DeferredChannelMessageWithSource).interaction_response_data(|data| {
+            data.content("downloading attachments...")
+        })
+    }).await.unwrap();
     read_file().await;
-    "done".to_string()
+    interaction.create_followup_message(&ctx.http, |response| {
+        response.content("downloaded attachments!")
+    }).await.unwrap();
 }
 
 // read the urls from the file "output.txt"

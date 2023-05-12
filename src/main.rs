@@ -19,26 +19,15 @@ impl EventHandler for Handler {
             interaction
         {
             println!("Received command interaction");
-            let content = match command.data.name.as_str() {
-                "index" => commands::index::run(&command.data.options, &ctx).await,
-                "hello" => commands::hello::run().await,
-                "download" => commands::download::run().await,
-                _ => String::from("no command"),
+            let _content = match command.data.name.as_str() {
+                "index" => commands::index::run(&command.data.options, &ctx, &command).await,
+                "hello" => commands::hello::run(&ctx, &command).await,
+                "download" => commands::download::run(&ctx, &command).await,
+                _ => (),
                 // api ref for discord interactions
                 // https://discord.com/developers/docs/interactions/application-commands
                 // https://discord.com/developers/docs/reference
             };
-
-            if let Err(why) = command
-                .create_interaction_response(&ctx.http, |response| {
-                    response
-                        .kind(model::application::interaction::InteractionResponseType::ChannelMessageWithSource)
-                        .interaction_response_data(|message| message.content(content))
-                })
-                .await
-            {
-                println!("Cannot respond to slash command: {}", why);
-            }
         }
     }
 
