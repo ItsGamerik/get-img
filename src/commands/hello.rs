@@ -27,7 +27,7 @@ pub async fn run() -> String {
         "As-salamu alaykum",
     ];
 
-    let rng = rand::thread_rng().gen_range(0..21); // BE VERY CAREFUL TO USE CORRECT ARRAY LEN
+    let rng = rand::thread_rng().gen_range(0..greetings.len() - 1); // BE VERY CAREFUL TO USE CORRECT ARRAY LEN
 
     greetings[rng].to_string()
 }
