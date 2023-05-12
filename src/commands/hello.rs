@@ -1,7 +1,7 @@
 use rand::Rng;
-use serenity::builder::CreateApplicationCommand;
+use serenity::{builder::CreateApplicationCommand, model::prelude::interaction::{application_command::ApplicationCommandInteraction, InteractionResponseType}, prelude::Context};
 
-pub async fn run() -> String {
+pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
     let greetings = [
         "Hallo",
         "Hi",
@@ -29,7 +29,12 @@ pub async fn run() -> String {
 
     let rng = rand::thread_rng().gen_range(0..greetings.len() - 1); // BE VERY CAREFUL TO USE CORRECT ARRAY LEN
 
-    greetings[rng].to_string()
+    let hello = greetings[rng].to_string();
+    interaction.create_interaction_response(&ctx.http, |response| {
+        response.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(|data| {
+            data.content(hello)
+        })
+    }).await.unwrap();
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {

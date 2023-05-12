@@ -1,6 +1,8 @@
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 
+use serenity::model::prelude::interaction::InteractionResponseType;
+use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::prelude::{Attachment, Message};
 use serenity::{
     builder::CreateApplicationCommand,
@@ -12,7 +14,7 @@ use serenity::{
 };
 
 // run the command
-pub async fn run(options: &[CommandDataOption], ctx: &Context) -> String {
+pub async fn run(options: &[CommandDataOption], ctx: &Context, interaction: &ApplicationCommandInteraction) {
     let option = options
         .get(0)
         .expect("expected option")
@@ -21,15 +23,26 @@ pub async fn run(options: &[CommandDataOption], ctx: &Context) -> String {
         .expect("user object");
 
     if let CommandDataOptionValue::Channel(channel) = option {
-        let response = format!(
-            "der ausgewählte kanal ist: {}",
+        let response_string = format!(
+            "added messages from channel **{}** to index",
             channel.name.as_ref().unwrap()
         );
+        interaction.create_interaction_response(&ctx.http, |response| {
+            response.kind(InteractionResponseType::DeferredChannelMessageWithSource).interaction_response_data(|data| {
+                data.content("index channel...".to_string())
+            })
+        }).await.unwrap();
         index(ctx, channel, options).await;
-        return response;
+        interaction.create_followup_message(&ctx.http, |response| {
+            response.content(response_string)
+        }).await.unwrap();
+        
     } else {
-        let response = "no channel id given".to_string();
-        return response;
+        interaction.create_interaction_response(&ctx.http, |response| {
+            response.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(|data| {
+                data.content("an error occured".to_string())
+            })
+        }).await.unwrap();
     }
 }
 
