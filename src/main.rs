@@ -41,14 +41,10 @@ impl EventHandler for Handler {
                 .expect("guild id expected")
                 .parse()
                 .expect("guild id has to be a valid integer"),
-            // 927882809006235658 (testserver id)
         );
 
         let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
-            commands
-                // .create_application_command(|command| commands::index::register(command))
-                .create_application_command(|command| commands::hello::register(command))
-                // .create_application_command(|command| commands::download::register(command))
+            commands.create_application_command(|command| commands::hello::register(command))
         })
         .await;
         println!("guild commands created: {:#?}", commands);
@@ -67,11 +63,12 @@ impl EventHandler for Handler {
                 |command| commands::index::register(command),
             )
             .await;
-        let global_download = serenity::model::application::command::Command::create_global_application_command(
-            &ctx.http,
-            |command| commands::download::register(command),
-        )
-        .await;
+        let global_download =
+            serenity::model::application::command::Command::create_global_application_command(
+                &ctx.http,
+                |command| commands::download::register(command),
+            )
+            .await;
         println!("registered global command: {:#?}", global_download);
         println!("registered global command: {:#?}", global_hello);
         println!("registered global command: {:#?}", global_index);

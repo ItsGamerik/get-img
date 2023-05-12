@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use reqwest::Client;
 use tokio::{
@@ -6,18 +6,60 @@ use tokio::{
     io::{self, AsyncBufReadExt, AsyncWriteExt},
 };
 
-use serenity::{builder::CreateApplicationCommand, model::{Permissions, prelude::interaction::{application_command::ApplicationCommandInteraction, InteractionResponseType}}, futures::TryFutureExt, prelude::Context};
+use serenity::{
+    builder::CreateApplicationCommand,
+    futures::TryFutureExt,
+    model::{
+        prelude::{
+            interaction::{
+                application_command::{ApplicationCommandInteraction, CommandDataOptionValue},
+                InteractionResponseType,
+            },
+            AttachmentType,
+        },
+        Permissions,
+    },
+    prelude::Context,
+};
 
 pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
-    interaction.create_interaction_response(&ctx.http, |response| {
-        response.kind(InteractionResponseType::DeferredChannelMessageWithSource).interaction_response_data(|data| {
-            data.content("downloading attachments...")
+    let command_option = interaction
+        .data
+        .options
+        .get(0)
+        .expect("expected option")
+        .resolved
+        .as_ref()
+        .expect("expected user object");
+
+    interaction
+        .create_interaction_response(&ctx.http, |response| {
+            response
+                .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+                .interaction_response_data(|data| data.content("downloading attachments..."))
         })
-    }).await.unwrap();
+        .await
+        .unwrap();
     read_file().await;
-    interaction.create_followup_message(&ctx.http, |response| {
-        response.content("downloaded attachments!")
-    }).await.unwrap();
+    let path = Path::new("./download/output.txt");
+    if let CommandDataOptionValue::Boolean(true) = command_option {
+        interaction
+            .create_followup_message(&ctx.http, |response| {
+                response
+                    .content("downloaded attachments!")
+                    .add_file(AttachmentType::Path(path))
+            })
+            .await
+            .unwrap();
+    } else {
+        interaction
+            .create_followup_message(&ctx.http, |response| {
+                response.content("downloaded attachments!")
+            })
+            .await
+            .unwrap();
+    }
+    println!("done downloading files from output.txt file.");
 }
 
 // read the urls from the file "output.txt"
@@ -31,7 +73,9 @@ async fn read_file() {
             download_file(line).await;
         }
     }
-    fs::remove_file("./download/output.txt").unwrap_or_else(|_| ()).await;
+    fs::remove_file("./download/output.txt")
+        .unwrap_or_else(|_| ())
+        .await;
 }
 
 // use Reqwest crate to download the url from cdn.discord.com or whatever with the file name and extension of the original file.
@@ -76,5 +120,12 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
     command
         .name("download")
         .description("download the links saved to the output file")
+        .create_option(|option| {
+            option
+                .name("upload_result")
+                .description("attach the file containing the links")
+                .kind(serenity::model::prelude::command::CommandOptionType::Boolean)
+                .required(true)
+        })
         .default_member_permissions(Permissions::ADMINISTRATOR)
 }

@@ -1,9 +1,10 @@
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 
-use serenity::model::prelude::interaction::InteractionResponseType;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
+use serenity::model::prelude::interaction::InteractionResponseType;
 use serenity::model::prelude::{Attachment, Message};
+use serenity::model::Permissions;
 use serenity::{
     builder::CreateApplicationCommand,
     model::prelude::{
@@ -14,7 +15,11 @@ use serenity::{
 };
 
 // run the command
-pub async fn run(options: &[CommandDataOption], ctx: &Context, interaction: &ApplicationCommandInteraction) {
+pub async fn run(
+    options: &[CommandDataOption],
+    ctx: &Context,
+    interaction: &ApplicationCommandInteraction,
+) {
     let option = options
         .get(0)
         .expect("expected option")
@@ -27,22 +32,28 @@ pub async fn run(options: &[CommandDataOption], ctx: &Context, interaction: &App
             "added messages from channel **{}** to index",
             channel.name.as_ref().unwrap()
         );
-        interaction.create_interaction_response(&ctx.http, |response| {
-            response.kind(InteractionResponseType::DeferredChannelMessageWithSource).interaction_response_data(|data| {
-                data.content("index channel...".to_string())
+        interaction
+            .create_interaction_response(&ctx.http, |response| {
+                response
+                    .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+                    .interaction_response_data(|data| data.content("index channel...".to_string()))
             })
-        }).await.unwrap();
+            .await
+            .unwrap();
         index(ctx, channel, options).await;
-        interaction.create_followup_message(&ctx.http, |response| {
-            response.content(response_string)
-        }).await.unwrap();
-        
+        interaction
+            .create_followup_message(&ctx.http, |response| response.content(response_string))
+            .await
+            .unwrap();
     } else {
-        interaction.create_interaction_response(&ctx.http, |response| {
-            response.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(|data| {
-                data.content("an error occured".to_string())
+        interaction
+            .create_interaction_response(&ctx.http, |response| {
+                response
+                    .kind(InteractionResponseType::ChannelMessageWithSource)
+                    .interaction_response_data(|data| data.content("an error occured".to_string()))
             })
-        }).await.unwrap();
+            .await
+            .unwrap();
     }
 }
 
@@ -58,14 +69,15 @@ async fn index(ctx: &Context, channel: &PartialChannel, opt: &[CommandDataOption
     loop {
         let messages = channel
             .id
-            .messages(&ctx, |retriever| retriever.before(single_message_id).limit(100))
+            .messages(&ctx, |retriever| {
+                retriever.before(single_message_id).limit(100)
+            })
             .await
             .expect("Failed to retrieve messages");
 
         if messages.is_empty() {
             break;
         }
-
 
         // try to iterate "upwards" in the channel
         single_message_id = messages.last().unwrap().id;
@@ -83,15 +95,14 @@ async fn index(ctx: &Context, channel: &PartialChannel, opt: &[CommandDataOption
     }
 }
 
-
 // dont index attachments
 async fn index_all_messages(messages: Vec<Message>) {
     let mut file = OpenOptions::new()
-    .write(true)
-    .create(true)
-    .append(true)
-    .open("./download/output.txt")
-    .unwrap();
+        .write(true)
+        .create(true)
+        .append(true)
+        .open("./download/output.txt")
+        .unwrap();
     let header_string = "userid,message,timestamp".to_string();
     if let Err(e) = writeln!(file, "{header_string}") {
         eprintln!("error writing to file: {}", e);
@@ -181,4 +192,5 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
                 .kind(serenity::model::prelude::command::CommandOptionType::Boolean)
                 .required(true)
         })
+        .default_member_permissions(Permissions::ADMINISTRATOR)
 }
