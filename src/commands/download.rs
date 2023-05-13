@@ -32,6 +32,7 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
         .as_ref()
         .expect("expected user object");
 
+    let path = Path::new("./download/output.txt");
     interaction
         .create_interaction_response(&ctx.http, |response| {
             response
@@ -40,26 +41,49 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
         })
         .await
         .unwrap();
-    read_file().await;
-    let path = Path::new("./download/output.txt");
-    if let CommandDataOptionValue::Boolean(true) = command_option {
-        interaction
-            .create_followup_message(&ctx.http, |response| {
-                response
-                    .content("downloaded attachments!")
-                    .add_file(AttachmentType::Path(path))
-            })
-            .await
-            .unwrap();
+    if let Ok(meta) = fs::metadata(path).await {
+        if meta.is_file() {
+            read_file().await;
+            if let CommandDataOptionValue::Boolean(true) = command_option {
+                interaction
+                    .create_followup_message(&ctx.http, |response| {
+                        response
+                            .content("downloaded attachments!")
+                            .add_file(AttachmentType::Path(path))
+                    })
+                    .await
+                    .unwrap();
+                fs::remove_file("./download/output.txt")
+                    .unwrap_or_else(|_| ())
+                    .await;
+            } else {
+                interaction
+                    .create_followup_message(&ctx.http, |response| {
+                        response.content("downloaded attachments!")
+                    })
+                    .await
+                    .unwrap();
+                fs::remove_file("./download/output.txt")
+                    .unwrap_or_else(|_| ())
+                    .await;
+            }
+            println!("done downloading files from output.txt file.");
+        } else {
+            interaction
+                .create_followup_message(&ctx.http, |response| {
+                    response.content("An error occured, contact the dev to check logs.")
+                })
+                .await
+                .unwrap();
+        }
     } else {
         interaction
             .create_followup_message(&ctx.http, |response| {
-                response.content("downloaded attachments!")
+                response.content("Not yet indexed. Try using `/index` first.")
             })
             .await
             .unwrap();
     }
-    println!("done downloading files from output.txt file.");
 }
 
 // read the urls from the file "output.txt"
@@ -73,9 +97,6 @@ async fn read_file() {
             download_file(line).await;
         }
     }
-    fs::remove_file("./download/output.txt")
-        .unwrap_or_else(|_| ())
-        .await;
 }
 
 // use Reqwest crate to download the url from cdn.discord.com or whatever with the file name and extension of the original file.
