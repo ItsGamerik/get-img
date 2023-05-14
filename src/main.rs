@@ -20,7 +20,7 @@ impl EventHandler for Handler {
         {
             println!("Received command interaction");
             let _content = match command.data.name.as_str() {
-                "index" => commands::index::run(&command.data.options, &ctx, &command).await,
+                "index" => commands::index::run( &ctx, &command).await,
                 "hello" => commands::hello::run(&ctx, &command).await,
                 "download" => commands::download::run(&ctx, &command).await,
                 _ => (),

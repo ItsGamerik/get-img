@@ -16,16 +16,10 @@ use serenity::{
 
 // run the command
 pub async fn run(
-    options: &[CommandDataOption],
     ctx: &Context,
     interaction: &ApplicationCommandInteraction,
 ) {
-    let option = options
-        .get(0)
-        .expect("expected option")
-        .resolved
-        .as_ref()
-        .expect("user object");
+    let option = interaction.data.options.get(0).expect("expected user option").resolved.as_ref().expect("expected user objexct");
 
     if let CommandDataOptionValue::Channel(channel) = option {
         let response_string = format!(
@@ -40,7 +34,7 @@ pub async fn run(
             })
             .await
             .unwrap();
-        index(ctx, channel, options).await;
+        index(ctx, channel, &interaction.data.options).await;
         interaction
             .create_followup_message(&ctx.http, |response| response.content(response_string))
             .await
