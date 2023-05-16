@@ -15,11 +15,15 @@ use serenity::{
 };
 
 // run the command
-pub async fn run(
-    ctx: &Context,
-    interaction: &ApplicationCommandInteraction,
-) {
-    let option = interaction.data.options.get(0).expect("expected user option").resolved.as_ref().expect("expected user objexct");
+pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
+    let option = interaction
+        .data
+        .options
+        .get(0)
+        .expect("expected user option")
+        .resolved
+        .as_ref()
+        .expect("expected user objexct");
 
     if let CommandDataOptionValue::Channel(channel) = option {
         let response_string = format!(

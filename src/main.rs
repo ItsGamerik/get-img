@@ -20,9 +20,10 @@ impl EventHandler for Handler {
         {
             println!("Received command interaction");
             let _content = match command.data.name.as_str() {
-                "index" => commands::index::run( &ctx, &command).await,
+                "index" => commands::index::run(&ctx, &command).await,
                 "hello" => commands::hello::run(&ctx, &command).await,
                 "download" => commands::download::run(&ctx, &command).await,
+                // "watch" => commands::watch::run(&ctx, &command).await,
                 _ => (),
                 // api ref for discord interactions
                 // https://discord.com/developers/docs/interactions/application-commands
@@ -30,7 +31,9 @@ impl EventHandler for Handler {
             };
         }
     }
-
+    // async fn message(&self, ctx: Context, msg: Message) {
+    //     if
+    // }
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
 
@@ -69,9 +72,14 @@ impl EventHandler for Handler {
                 |command| commands::download::register(command),
             )
             .await;
+        // let global_watch = serenity::model::application::command::Command::create_global_application_command(
+        //     &ctx.http,
+        //     |command| commands::watch::register(command),
+        // ).await;
         println!("registered global command: {:#?}", global_download);
         println!("registered global command: {:#?}", global_hello);
         println!("registered global command: {:#?}", global_index);
+        // println!("registered global command: {:#?}", global_watch);
     }
 }
 
