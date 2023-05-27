@@ -1,14 +1,13 @@
 use std::collections::HashMap;
-use tokio::task::spawn;
 
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
-use serenity::model::prelude::ChannelId;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOptionValue;
+use serenity::model::prelude::Message;
 use serenity::prelude::Context;
 
-pub async fn run(_ctx: &Context, command: &ApplicationCommandInteraction) {
+pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
     // get the command options etcetc
     let option_channel = command
         .data
@@ -33,15 +32,6 @@ pub async fn run(_ctx: &Context, command: &ApplicationCommandInteraction) {
         HashMap::new();
     let channel_id = command.channel_id;
 
-    // if let CommandDataOptionValue::Boolean(true) = option_bool {
-    //     if let CommandDataOptionValue::Channel(_channel) = option_channel {
-    //         channel_toggle_keys.insert(channel_id, true);
-    //     }
-    // } else if let CommandDataOptionValue::Boolean(false) = option_bool {
-    //     if let CommandDataOptionValue::Channel(_channel) = option_channel {
-    //         channel_toggle_keys.insert(channel_id, false);
-    //     }
-    // }
     if let (CommandDataOptionValue::Boolean(value), CommandDataOptionValue::Channel(_channel)) =
         (option_bool, option_channel)
     {
@@ -53,15 +43,20 @@ pub async fn run(_ctx: &Context, command: &ApplicationCommandInteraction) {
 
     if let Some(toggle) = channel_toggle_keys.get(&channel_id) {
         if toggle.to_owned() == true {
-            spawn(channel_watcher(channel_id));
+            let message = channel_id
+                .messages(&ctx.http, |retriever| retriever.limit(1))
+                .await
+                .expect("could not retrieve messages");
+            channel_watcher(message).await;
         } else {
             return;
         }
     }
 }
 
-async fn channel_watcher(channel_id: ChannelId) {
-    
+async fn channel_watcher(message: Vec<Message>) {
+    message.get(0).unwrap();
+    dbg!(message);
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
