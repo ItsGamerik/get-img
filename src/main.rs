@@ -23,7 +23,7 @@ impl EventHandler for Handler {
                 "index" => commands::index::run(&ctx, &command).await,
                 "hello" => commands::hello::run(&ctx, &command).await,
                 "download" => commands::download::run(&ctx, &command).await,
-                // "watch" => commands::watch::run(&ctx, &command).await,
+                "watch" => commands::watch::run(&ctx, &command).await,
                 _ => (),
                 // api ref for discord interactions
                 // https://discord.com/developers/docs/interactions/application-commands
@@ -47,7 +47,8 @@ impl EventHandler for Handler {
         );
 
         let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
-            commands.create_application_command(|command| commands::hello::register(command))
+            commands.create_application_command(|command| commands::hello::register(command));
+            commands.create_application_command(|command| commands::watch::register(command))
         })
         .await;
         println!("guild commands created: {:#?}", commands);
