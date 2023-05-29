@@ -6,6 +6,11 @@ on:
       paths:
         - "/src/**"
         - "**.rs"
+    pull_request:
+      branches: [ "master" ]
+      paths:
+        - "/src/**"
+        - "**.rs"
 
 env:
     CARGO_TERM_COLOR: always
