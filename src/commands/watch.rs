@@ -1,14 +1,12 @@
 use std::collections::HashMap;
 
-
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOptionValue;
-use serenity::model::prelude::{Message, ChannelId};
+use serenity::model::prelude::{ChannelId, Message};
 use serenity::prelude::Context;
 use tokio::task;
-
 
 pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
     // get the command options etcetc
@@ -43,20 +41,19 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
     // thanks to the rust discord :D
 
     // watch channel
-    // TODO: fix thingy with toggle
     if let Some(toggle) = channel_toggle_keys.get(&channel_id) {
         if *toggle == true {
             let ctx = ctx.clone();
             let channel_id = channel_id.clone();
 
             task::spawn(async move {
-                background_task(&ctx, &channel_id).await;
+                background_task(&ctx, &channel_id, channel_toggle_keys).await;
             });
         }
     }
 }
 
-async fn background_task(ctx: &Context, channel_id: &ChannelId) {
+async fn background_task(ctx: &Context, channel_id: &ChannelId, togglemap: HashMap<ChannelId, bool>) {
     let mut last_message_id: Option<u64> = None;
 
     loop {
@@ -101,7 +98,6 @@ async fn channel_watcher(message: Vec<Message>, ctx: &Context) {
             dbg!(&latest_message.content);
         }
     }
-
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
