@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::thread::JoinHandle;
 
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
@@ -42,12 +43,13 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
     // thanks to the rust discord :D
 
     // watch channel
+    // TODO: add watch disabling HOW
     if let Some(toggle) = channel_toggle_keys.get(&channel_id) {
+        let task_handle: JoinHandle<()>;
         if *toggle == true {
             let ctx = ctx.clone();
             let channel_id = channel_id.clone();
-
-            task::spawn(async move {
+            let task = task::spawn(async move {
                 background_task(&ctx, &channel_id, channel_toggle_keys).await;
             });
         }
@@ -75,7 +77,7 @@ async fn background_task(ctx: &Context, channel_id: &ChannelId, _togglemap: Hash
             last_message_id = Some(latest_message_id);
         }
 
-        // Wait for some time before checking for new messages again
+        // TODO: execute every time a new message is sent
         tokio::time::sleep(std::time::Duration::from_secs(10)).await;
     }
 }
