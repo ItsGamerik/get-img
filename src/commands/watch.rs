@@ -7,6 +7,7 @@ use serenity::model::prelude::interaction::application_command::CommandDataOptio
 use serenity::model::prelude::{ChannelId, Message};
 use serenity::prelude::Context;
 use tokio::task;
+use crate::commands;
 
 pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
     // get the command options etcetc
@@ -53,9 +54,8 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
     }
 }
 
-async fn background_task(ctx: &Context, channel_id: &ChannelId, togglemap: HashMap<ChannelId, bool>) {
+async fn background_task(ctx: &Context, channel_id: &ChannelId, _togglemap: HashMap<ChannelId, bool>) {
     let mut last_message_id: Option<u64> = None;
-
     loop {
         let messages = channel_id
             .messages(&ctx.http, |retriever| retriever.limit(1))
@@ -68,6 +68,7 @@ async fn background_task(ctx: &Context, channel_id: &ChannelId, togglemap: HashM
             if let Some(last_id) = last_message_id {
                 if last_id != latest_message_id {
                     dbg!(&latest_message.content);
+                    commands::index::parse(latest_message.content.to_string()).await;
                 }
             }
 
@@ -76,27 +77,6 @@ async fn background_task(ctx: &Context, channel_id: &ChannelId, togglemap: HashM
 
         // Wait for some time before checking for new messages again
         tokio::time::sleep(std::time::Duration::from_secs(10)).await;
-    }
-}
-
-async fn channel_watcher(message: Vec<Message>, ctx: &Context) {
-    let latest_message = message.get(0).unwrap();
-    let latest_id = latest_message.id;
-
-    // Retrieve the last message sent in the channel
-    let channel_id = latest_message.channel_id;
-    let messages = channel_id
-        .messages(&ctx.http, |retriever| retriever.before(latest_id).limit(1))
-        .await
-        .expect("could not retrieve messages");
-    let last_message = messages.get(0);
-
-    if let Some(last_message) = last_message {
-        // Compare the content of the new message with the last message
-        if latest_message.id != last_message.id {
-            // Messages are the same, perform your action here
-            dbg!(&latest_message.content);
-        }
     }
 }
 

@@ -157,7 +157,7 @@ async fn index_images(messages: Vec<Message>) {
 }
 
 // parse the messages/attachments to the file "output.txt"
-async fn parse(content: String) {
+pub async fn parse(content: String) {
     if let Err(why) = fs::create_dir_all("./download/") {
         eprintln!("error creating file: {}", why);
     }
