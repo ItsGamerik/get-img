@@ -1,13 +1,13 @@
 use std::collections::HashMap;
-use std::thread::JoinHandle;
 
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOptionValue;
-use serenity::model::prelude::{ChannelId, Message};
+use serenity::model::prelude::ChannelId;
 use serenity::prelude::Context;
-use tokio::task;
+// try and use the correct imports :)
+use tokio::task::{self, JoinHandle};
 use crate::commands;
 
 pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
@@ -45,18 +45,23 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
     // watch channel
     // TODO: add watch disabling HOW
     if let Some(toggle) = channel_toggle_keys.get(&channel_id) {
-        let task_handle: JoinHandle<()>;
+        let task_handle = None;
         if *toggle == true {
+            println!("started watching: {}", &channel_id);
             let ctx = ctx.clone();
             let channel_id = channel_id.clone();
-            let task = task::spawn(async move {
-                background_task(&ctx, &channel_id, channel_toggle_keys).await;
+            task::spawn(async move {
+                background_task(&ctx, &channel_id).await;
             });
+        } else {
+            if let Some(exists) = task_handle {
+                stop_task(exists).await;
+            }
         }
     }
 }
 
-async fn background_task(ctx: &Context, channel_id: &ChannelId, _togglemap: HashMap<ChannelId, bool>) {
+async fn background_task(ctx: &Context, channel_id: &ChannelId,) {
     let mut last_message_id: Option<u64> = None;
     loop {
         let messages = channel_id
@@ -78,8 +83,13 @@ async fn background_task(ctx: &Context, channel_id: &ChannelId, _togglemap: Hash
         }
 
         // TODO: execute every time a new message is sent
-        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+        tokio::time::sleep(std::time::Duration::from_secs(3)).await;
     }
+}
+
+async fn stop_task(task_handle: JoinHandle<()>) {
+    println!("stopped watching handle: {:?}", task_handle);
+    task_handle.abort()
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
