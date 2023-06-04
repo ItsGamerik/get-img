@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use serenity::builder::CreateApplicationCommand;
+
+use serenity::{builder::CreateApplicationCommand};
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOptionValue;
@@ -44,18 +45,20 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
 
     // watch channel
     // TODO: add watch disabling HOW
+    let mut task_handles: HashMap<ChannelId, JoinHandle<()>> = HashMap::new();
     if let Some(toggle) = channel_toggle_keys.get(&channel_id) {
-        let task_handle = None;
         if *toggle == true {
-            println!("started watching: {}", &channel_id);
             let ctx = ctx.clone();
             let channel_id = channel_id.clone();
-            task::spawn(async move {
+            let task = task::spawn(async move {
                 background_task(&ctx, &channel_id).await;
             });
+            println!("started watching: {} with task handle {:?}", &channel_id, task);
+            task_handles.insert(channel_id, task);
         } else {
-            if let Some(exists) = task_handle {
-                stop_task(exists).await;
+            if let Some(task_handle) = task_handles.get(&channel_id) {
+                task_handle.abort();
+                println!("stopped task {:?}", &task_handle);
             }
         }
     }
@@ -85,11 +88,6 @@ async fn background_task(ctx: &Context, channel_id: &ChannelId,) {
         // TODO: execute every time a new message is sent
         tokio::time::sleep(std::time::Duration::from_secs(3)).await;
     }
-}
-
-async fn stop_task(task_handle: JoinHandle<()>) {
-    println!("stopped watching handle: {:?}", task_handle);
-    task_handle.abort()
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
