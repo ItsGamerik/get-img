@@ -1,10 +1,12 @@
 mod commands;
 
+use std::collections::HashMap;
 use std::env;
 
-use serenity::model::prelude::{GuildId, Ready};
+use serenity::model::prelude::{ChannelId, GuildId, Ready};
 use serenity::prelude::*;
 use serenity::{async_trait, model};
+use tokio::task::JoinHandle;
 
 struct Handler;
 
@@ -18,12 +20,17 @@ impl EventHandler for Handler {
         if let model::application::interaction::Interaction::ApplicationCommand(command) =
             interaction
         {
+            let mut watch_map: HashMap<ChannelId, JoinHandle<()>> = HashMap::new();
+
             println!("Received command interaction");
             let _content = match command.data.name.as_str() {
                 "index" => commands::index::run(&ctx, &command).await,
                 "hello" => commands::hello::run(&ctx, &command).await,
                 "download" => commands::download::run(&ctx, &command).await,
-                "watch" => commands::watch::run(&ctx, &command).await,
+                "watch" => {
+                    commands::watch::run(&ctx, &command, &mut watch_map).await;
+                    dbg!(watch_map);
+                }
                 _ => (),
                 // api ref for discord interactions
                 // https://discord.com/developers/docs/interactions/application-commands

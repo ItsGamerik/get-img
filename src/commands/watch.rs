@@ -1,17 +1,20 @@
 use std::collections::HashMap;
 
-
-use serenity::{builder::CreateApplicationCommand};
+use serenity::builder::CreateApplicationCommand;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOptionValue;
 use serenity::model::prelude::ChannelId;
 use serenity::prelude::Context;
 // try and use the correct imports :)
+use crate::commands::{self};
 use tokio::task::{self, JoinHandle};
-use crate::commands;
 
-pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
+pub async fn run(
+    ctx: &Context,
+    command: &ApplicationCommandInteraction,
+    watch_map: &mut HashMap<ChannelId, JoinHandle<()>>,
+) {
     // get the command options etcetc
     let option_channel = command
         .data
@@ -44,27 +47,42 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
     // thanks to the rust discord :D
 
     // watch channel
-    // TODO: add watch disabling HOW
-    let mut task_handles: HashMap<ChannelId, JoinHandle<()>> = HashMap::new();
+    // TODO: use persistent database
     if let Some(toggle) = channel_toggle_keys.get(&channel_id) {
-        if *toggle == true {
+        if *toggle {
+            // toggle is "true"
             let ctx = ctx.clone();
-            let channel_id = channel_id.clone();
             let task = task::spawn(async move {
                 background_task(&ctx, &channel_id).await;
             });
-            println!("started watching: {} with task handle {:?}", &channel_id, task);
-            task_handles.insert(channel_id, task);
-        } else {
-            if let Some(task_handle) = task_handles.get(&channel_id) {
-                task_handle.abort();
-                println!("stopped task {:?}", &task_handle);
-            }
+
+            println!(
+                "started watching: {} with task handle {:?}",
+                &channel_id, &task
+            );
+
+            watch_map.insert(channel_id, task);
+            println!("added {} to the watchlist", &channel_id)
+        } else if !(*toggle) {
+            // toggle is "false"
+            let handle = match watch_map.get(&channel_id) {
+                Some(handle) => handle,
+                None => {
+                    eprintln!("error whilst getting handle for channel: {}", &channel_id);
+                    return;
+                }
+            };
+            handle.abort();
         }
     }
+
+    // command
+    //     .create_followup_message(&ctx.http, |response| response.content("did the thing"))
+    //     .await
+    //     .unwrap();
 }
 
-async fn background_task(ctx: &Context, channel_id: &ChannelId,) {
+async fn background_task(ctx: &Context, channel_id: &ChannelId) {
     let mut last_message_id: Option<u64> = None;
     loop {
         let messages = channel_id
