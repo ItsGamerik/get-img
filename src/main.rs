@@ -2,6 +2,7 @@ mod commands;
 
 use std::collections::HashMap;
 use std::env;
+use std::sync::{Arc, Mutex};
 
 use serenity::model::prelude::{ChannelId, GuildId, Ready};
 use serenity::prelude::*;
@@ -20,7 +21,7 @@ impl EventHandler for Handler {
         if let model::application::interaction::Interaction::ApplicationCommand(command) =
             interaction
         {
-            let mut watch_map: HashMap<ChannelId, JoinHandle<()>> = HashMap::new();
+            let mut watch_map: Arc<Mutex<HashMap<ChannelId, JoinHandle<()>>>> = Arc::new(Mutex::new(HashMap::new()));
 
             println!("Received command interaction");
             let _content = match command.data.name.as_str() {

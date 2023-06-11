@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::{Arc, Mutex}};
 
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
@@ -13,7 +13,7 @@ use tokio::task::{self, JoinHandle};
 pub async fn run(
     ctx: &Context,
     command: &ApplicationCommandInteraction,
-    watch_map: &mut HashMap<ChannelId, JoinHandle<()>>,
+    watch_map: &mut  Arc<Mutex<HashMap<ChannelId, JoinHandle<()>>>>,
 ) {
     // get the command options etcetc
     let option_channel = command
@@ -50,6 +50,7 @@ pub async fn run(
     // TODO: use persistent database
     if let Some(toggle) = channel_toggle_keys.get(&channel_id) {
         if *toggle {
+            let mut watch_map_lock = watch_map.lock().unwrap();
             // toggle is "true"
             let ctx = ctx.clone();
             let task = task::spawn(async move {
@@ -61,11 +62,12 @@ pub async fn run(
                 &channel_id, &task
             );
 
-            watch_map.insert(channel_id, task);
+            watch_map_lock.insert(channel_id, task);
             println!("added {} to the watchlist", &channel_id)
         } else if !(*toggle) {
             // toggle is "false"
-            let handle = match watch_map.get(&channel_id) {
+            let watch_map_lock = watch_map.lock().unwrap();
+            let handle = match watch_map_lock.get(&channel_id) {
                 Some(handle) => handle,
                 None => {
                     eprintln!("error whilst getting handle for channel: {}", &channel_id);
