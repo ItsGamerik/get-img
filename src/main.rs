@@ -1,10 +1,13 @@
 mod commands;
 
+use std::collections::HashMap;
 use std::env;
+use std::sync::{Arc, Mutex};
 
-use serenity::model::prelude::{GuildId, Ready};
+use serenity::model::prelude::{ChannelId, GuildId, Ready};
 use serenity::prelude::*;
 use serenity::{async_trait, model};
+use tokio::task::JoinHandle;
 
 struct Handler;
 
@@ -20,9 +23,12 @@ impl EventHandler for Handler {
         {
             println!("Received command interaction");
             let _content = match command.data.name.as_str() {
-                "index" => commands::index::run( &ctx, &command).await,
+                "index" => commands::index::run(&ctx, &command).await,
                 "hello" => commands::hello::run(&ctx, &command).await,
                 "download" => commands::download::run(&ctx, &command).await,
+                "watch" => {
+                    commands::watch::run(&ctx, &command).await;
+                }
                 _ => (),
                 // api ref for discord interactions
                 // https://discord.com/developers/docs/interactions/application-commands
@@ -30,7 +36,9 @@ impl EventHandler for Handler {
             };
         }
     }
-
+    // async fn message(&self, ctx: Context, msg: Message) {
+    //     if
+    // }
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
 
@@ -44,7 +52,8 @@ impl EventHandler for Handler {
         );
 
         let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
-            commands.create_application_command(|command| commands::hello::register(command))
+            commands.create_application_command(|command| commands::hello::register(command));
+            commands.create_application_command(|command| commands::watch::register(command))
         })
         .await;
         println!("guild commands created: {:#?}", commands);
@@ -69,14 +78,21 @@ impl EventHandler for Handler {
                 |command| commands::download::register(command),
             )
             .await;
+        // let global_watch = serenity::model::application::command::Command::create_global_application_command(
+        //     &ctx.http,
+        //     |command| commands::watch::register(command),
+        // ).await;
         println!("registered global command: {:#?}", global_download);
         println!("registered global command: {:#?}", global_hello);
         println!("registered global command: {:#?}", global_index);
+        // println!("registered global command: {:#?}", global_watch);
     }
 }
 
 #[tokio::main]
 async fn main() {
+    let _watch_map: Arc<Mutex<HashMap<ChannelId, JoinHandle<()>>>> =
+        Arc::new(Mutex::new(HashMap::new()));
     // Configure the client with your Discord bot token in the environment.
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
     // Set gateway intents, which decides what events the bot will be notified about

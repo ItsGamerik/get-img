@@ -15,11 +15,15 @@ use serenity::{
 };
 
 // run the command
-pub async fn run(
-    ctx: &Context,
-    interaction: &ApplicationCommandInteraction,
-) {
-    let option = interaction.data.options.get(0).expect("expected user option").resolved.as_ref().expect("expected user objexct");
+pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
+    let option = interaction
+        .data
+        .options
+        .get(0)
+        .expect("expected user option")
+        .resolved
+        .as_ref()
+        .expect("expected user objexct");
 
     if let CommandDataOptionValue::Channel(channel) = option {
         let response_string = format!(
@@ -156,7 +160,7 @@ async fn index_images(messages: Vec<Message>) {
 }
 
 // parse the messages/attachments to the file "output.txt"
-async fn parse(content: String) {
+pub async fn parse(content: String) {
     if let Err(why) = fs::create_dir_all("./download/") {
         eprintln!("error creating file: {}", why);
     }
