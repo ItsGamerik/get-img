@@ -21,16 +21,13 @@ impl EventHandler for Handler {
         if let model::application::interaction::Interaction::ApplicationCommand(command) =
             interaction
         {
-            let mut watch_map: Arc<Mutex<HashMap<ChannelId, JoinHandle<()>>>> = Arc::new(Mutex::new(HashMap::new()));
-
             println!("Received command interaction");
             let _content = match command.data.name.as_str() {
                 "index" => commands::index::run(&ctx, &command).await,
                 "hello" => commands::hello::run(&ctx, &command).await,
                 "download" => commands::download::run(&ctx, &command).await,
                 "watch" => {
-                    commands::watch::run(&ctx, &command, &mut watch_map).await;
-                    dbg!(watch_map);
+                    commands::watch::run(&ctx, &command).await;
                 }
                 _ => (),
                 // api ref for discord interactions
@@ -94,6 +91,8 @@ impl EventHandler for Handler {
 
 #[tokio::main]
 async fn main() {
+    let _watch_map: Arc<Mutex<HashMap<ChannelId, JoinHandle<()>>>> =
+        Arc::new(Mutex::new(HashMap::new()));
     // Configure the client with your Discord bot token in the environment.
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
     // Set gateway intents, which decides what events the bot will be notified about

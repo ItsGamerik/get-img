@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::{Arc, Mutex}};
+use std::{collections::HashMap, fs::File, path::Path};
 
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
@@ -10,11 +10,9 @@ use serenity::prelude::Context;
 use crate::commands::{self};
 use tokio::task::{self, JoinHandle};
 
-pub async fn run(
-    ctx: &Context,
-    command: &ApplicationCommandInteraction,
-    watch_map: &mut  Arc<Mutex<HashMap<ChannelId, JoinHandle<()>>>>,
-) {
+static mut BACKGROUND_TASK: Option<task::JoinHandle<()>> = None;
+
+pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
     // get the command options etcetc
     let option_channel = command
         .data
@@ -47,34 +45,30 @@ pub async fn run(
     // thanks to the rust discord :D
 
     // watch channel
-    // TODO: use persistent database
     if let Some(toggle) = channel_toggle_keys.get(&channel_id) {
         if *toggle {
-            let mut watch_map_lock = watch_map.lock().unwrap();
             // toggle is "true"
             let ctx = ctx.clone();
             let task = task::spawn(async move {
                 background_task(&ctx, &channel_id).await;
             });
+            // wtf
+            unsafe {
+                BACKGROUND_TASK = Some(task);
+            }
 
             println!(
-                "started watching: {} with task handle {:?}",
-                &channel_id, &task
+                "started watching: {}",
+                &channel_id
             );
-
-            watch_map_lock.insert(channel_id, task);
             println!("added {} to the watchlist", &channel_id)
         } else if !(*toggle) {
             // toggle is "false"
-            let watch_map_lock = watch_map.lock().unwrap();
-            let handle = match watch_map_lock.get(&channel_id) {
-                Some(handle) => handle,
-                None => {
-                    eprintln!("error whilst getting handle for channel: {}", &channel_id);
-                    return;
+            unsafe {
+                if let Some(task) = &BACKGROUND_TASK {
+                    task.abort();
                 }
-            };
-            handle.abort();
+            }
         }
     }
 
