@@ -93,11 +93,14 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
                     BACKGROUND_TASK = None;
                 }
             }
-            command.create_interaction_response(&ctx.http, |response| {
-                response.interaction_response_data(|message| {
-                    message.content("stopped watching channel")
+            command
+                .create_interaction_response(&ctx.http, |response| {
+                    response.interaction_response_data(|message| {
+                        message.content("stopped watching channel")
+                    })
                 })
-            }).await.unwrap();
+                .await
+                .unwrap();
         }
     }
 }
@@ -116,7 +119,20 @@ async fn background_task(ctx: &Context, channel_id: &ChannelId) {
             if let Some(last_id) = last_message_id {
                 if last_id != latest_message_id {
                     if !latest_message.author.bot {
-                        commands::index::parse(latest_message.content.to_string()).await;
+                        if latest_message.attachments.iter().any(|a| !a.url.is_empty()) {
+                            let mut attachment_vec = Vec::new();
+                            for attachment in &latest_message.attachments {
+                                attachment_vec.push(attachment);
+                            }
+                            for i in attachment_vec
+                                .iter()
+                                .map(|attachment| attachment.url.clone())
+                            {
+                                commands::index::parse(i).await;
+                            }
+                        } else {
+                            commands::index::parse(latest_message.content.to_string()).await;
+                        }
                     }
                 }
             }
