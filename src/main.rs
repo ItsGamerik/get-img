@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::env;
 use std::sync::{Arc, Mutex};
 
-use serenity::model::prelude::{ChannelId, GuildId, Ready};
+use serenity::model::prelude::{ChannelId, GuildId, Ready, Activity};
 use serenity::prelude::*;
 use serenity::{async_trait, model};
 use tokio::task::JoinHandle;
@@ -41,6 +41,10 @@ impl EventHandler for Handler {
     // }
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
+
+        // set status of bot
+        let activity = Activity::watching("v1.1.0");
+        ctx.set_activity(activity).await;
 
         // register guild-specific command, does not take as long to update
 
