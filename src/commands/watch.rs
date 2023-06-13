@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs::File, path::Path};
+use std::collections::HashMap;
 
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
@@ -8,7 +8,7 @@ use serenity::model::prelude::ChannelId;
 use serenity::prelude::Context;
 // try and use the correct imports :)
 use crate::commands::{self};
-use tokio::task::{self, JoinHandle};
+use tokio::task::{self};
 
 static mut BACKGROUND_TASK: Option<task::JoinHandle<()>> = None;
 
@@ -47,8 +47,35 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
     // watch channel
     if let Some(toggle) = channel_toggle_keys.get(&channel_id) {
         if *toggle {
+            let channel_id_format = format!("{}{}{}", "<", &channel_id, ">");
             // toggle is "true"
+            unsafe {
+                if let Some(_) = &BACKGROUND_TASK {
+                    command
+                        .create_interaction_response(&ctx.http, |message| {
+                            message.interaction_response_data(|content| {
+                                content.content(
+                                    "could not create watcher: stop watching other channel first",
+                                )
+                            })
+                        })
+                        .await
+                        .unwrap();
+                    return;
+                }
+            }
             let ctx = ctx.clone();
+            command
+                .create_interaction_response(&ctx.http, |response| {
+                    response.interaction_response_data(|messsage| {
+                        messsage.content(format!(
+                            "creating channel watcher for {}",
+                            channel_id_format
+                        ))
+                    })
+                })
+                .await
+                .unwrap();
             let task = task::spawn(async move {
                 background_task(&ctx, &channel_id).await;
             });
@@ -57,25 +84,22 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
                 BACKGROUND_TASK = Some(task);
             }
 
-            println!(
-                "started watching: {}",
-                &channel_id
-            );
-            println!("added {} to the watchlist", &channel_id)
+            println!("started watching: {}", &channel_id);
         } else if !(*toggle) {
             // toggle is "false"
             unsafe {
                 if let Some(task) = &BACKGROUND_TASK {
                     task.abort();
+                    BACKGROUND_TASK = None;
                 }
             }
+            command.create_interaction_response(&ctx.http, |response| {
+                response.interaction_response_data(|message| {
+                    message.content("stopped watching channel")
+                })
+            }).await.unwrap();
         }
     }
-
-    // command
-    //     .create_followup_message(&ctx.http, |response| response.content("did the thing"))
-    //     .await
-    //     .unwrap();
 }
 
 async fn background_task(ctx: &Context, channel_id: &ChannelId) {
@@ -91,8 +115,9 @@ async fn background_task(ctx: &Context, channel_id: &ChannelId) {
 
             if let Some(last_id) = last_message_id {
                 if last_id != latest_message_id {
-                    dbg!(&latest_message.content);
-                    commands::index::parse(latest_message.content.to_string()).await;
+                    if !latest_message.author.bot {
+                        commands::index::parse(latest_message.content.to_string()).await;
+                    }
                 }
             }
 
