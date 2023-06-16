@@ -48,48 +48,61 @@ impl EventHandler for Handler {
 
         // register guild-specific command, does not take as long to update
 
-        let guild_id = GuildId(
-            env::var("GUILD_ID")
-                .expect("guild id expected")
-                .parse()
-                .expect("guild id has to be a valid integer"),
-        );
+        // let guild_id = GuildId(
+        //     env::var("GUILD_ID")
+        //         .expect("guild id expected")
+        //         .parse()
+        //         .expect("guild id has to be a valid integer"),
+        // );
 
-        let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
-            commands.create_application_command(|command| commands::hello::register(command))
-        })
-        .await;
-        println!("guild commands created: {:#?}", commands);
+        // let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
+        //     commands.create_application_command(|command| commands::hello::register(command))
+        // })
+        // .await;
+        // println!("guild commands created: {:#?}", commands);
 
         // global command registering
         // TODO: handle this better altogether
-        let global_hello =
-            serenity::model::application::command::Command::create_global_application_command(
-                &ctx.http,
-                |command| commands::hello::register(command),
-            )
-            .await;
-        let global_index =
-            serenity::model::application::command::Command::create_global_application_command(
-                &ctx.http,
-                |command| commands::index::register(command),
-            )
-            .await;
-        let global_download =
-            serenity::model::application::command::Command::create_global_application_command(
-                &ctx.http,
-                |command| commands::download::register(command),
-            )
-            .await;
+
+        // hello command
+        if let Err(e) = model::prelude::command::Command::create_global_application_command(
+            &ctx.http,
+            |command| commands::hello::register(command),
+        ).await {
+            eprintln!("an error occured while registering \"watch\" command: {}", e)
+        }
+
+        // index command
+        if let Err(e) = model::prelude::command::Command::create_global_application_command(
+            &ctx.http,
+            |command| commands::index::register(command),
+        ).await {
+            eprintln!("an error occured while registering \"watch\" command: {}", e)
+        }
+
+        // download command
+        if let Err(e) = model::prelude::command::Command::create_global_application_command(
+            &ctx.http,
+            |command| commands::download::register(command),
+        ).await {
+            eprintln!("an error occured while registering \"watch\" command: {}", e)
+        }
+
+        //
+        if let Err(e) = model::prelude::command::Command::create_global_application_command(
+            &ctx.http,
+            |command| commands::watch::register(command),
+        ).await {
+            eprintln!("an error occured while registering \"watch\" command: {}", e)
+        }
+
+        // watch command
         if let Err(e) = model::prelude::command::Command::create_global_application_command(
                 &ctx.http,
                 |command| commands::watch::register(command),
             ).await {
                 eprintln!("an error occured while registering \"watch\" command: {}", e)
             }
-        println!("registered global command: {:#?}", global_download);
-        println!("registered global command: {:#?}", global_hello);
-        println!("registered global command: {:#?}", global_index);
     }
 }
 
