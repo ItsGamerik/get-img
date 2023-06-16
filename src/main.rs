@@ -56,14 +56,13 @@ impl EventHandler for Handler {
         );
 
         let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
-            commands.create_application_command(|command| commands::hello::register(command));
-            commands.create_application_command(|command| commands::watch::register(command))
+            commands.create_application_command(|command| commands::hello::register(command))
         })
         .await;
         println!("guild commands created: {:#?}", commands);
 
         // global command registering
-
+        // TODO: handle this better altogether
         let global_hello =
             serenity::model::application::command::Command::create_global_application_command(
                 &ctx.http,
@@ -82,14 +81,15 @@ impl EventHandler for Handler {
                 |command| commands::download::register(command),
             )
             .await;
-        // let global_watch = serenity::model::application::command::Command::create_global_application_command(
-        //     &ctx.http,
-        //     |command| commands::watch::register(command),
-        // ).await;
+        if let Err(e) = model::prelude::command::Command::create_global_application_command(
+                &ctx.http,
+                |command| commands::watch::register(command),
+            ).await {
+                eprintln!("an error occured while registering \"watch\" command: {}", e)
+            }
         println!("registered global command: {:#?}", global_download);
         println!("registered global command: {:#?}", global_hello);
         println!("registered global command: {:#?}", global_index);
-        // println!("registered global command: {:#?}", global_watch);
     }
 }
 
