@@ -34,12 +34,11 @@ $ENV:DISCORD_TOKEN=""
 
 command to set your environment variable.
 
-optionally, you can also set a `GUILD_ID` as an environment variable to use the `/hello` command.
-
 ### commands
 
 ```text
 /hello                      say hello in a random language
 /index [channel] [bool]     index every message with an attachment in a channel, unless "false" is used
 /download                   download the links saved in the output.txt file
+/watch [channel] [bool]     toggles the automatic indexing for a single channel on and off, can only be ON for one channel at a time.
 ```
