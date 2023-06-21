@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::env;
 use std::sync::{Arc, Mutex};
 
-use serenity::model::prelude::{ChannelId, GuildId, Ready, Activity};
+use serenity::model::prelude::{Activity, ChannelId, Ready};
 use serenity::prelude::*;
 use serenity::{async_trait, model};
 use tokio::task::JoinHandle;
@@ -68,41 +68,53 @@ impl EventHandler for Handler {
         if let Err(e) = model::prelude::command::Command::create_global_application_command(
             &ctx.http,
             |command| commands::hello::register(command),
-        ).await {
-            eprintln!("an error occured while registering \"watch\" command: {}", e)
+        )
+        .await
+        {
+            eprintln!(
+                "an error occured while registering \"hello\" command: {}",
+                e
+            )
         }
 
         // index command
         if let Err(e) = model::prelude::command::Command::create_global_application_command(
             &ctx.http,
             |command| commands::index::register(command),
-        ).await {
-            eprintln!("an error occured while registering \"watch\" command: {}", e)
+        )
+        .await
+        {
+            eprintln!(
+                "an error occured while registering \"index\" command: {}",
+                e
+            )
         }
 
         // download command
         if let Err(e) = model::prelude::command::Command::create_global_application_command(
             &ctx.http,
             |command| commands::download::register(command),
-        ).await {
-            eprintln!("an error occured while registering \"watch\" command: {}", e)
-        }
-
-        //
-        if let Err(e) = model::prelude::command::Command::create_global_application_command(
-            &ctx.http,
-            |command| commands::watch::register(command),
-        ).await {
-            eprintln!("an error occured while registering \"watch\" command: {}", e)
+        )
+        .await
+        {
+            eprintln!(
+                "an error occured while registering \"download\" command: {}",
+                e
+            )
         }
 
         // watch command
         if let Err(e) = model::prelude::command::Command::create_global_application_command(
-                &ctx.http,
-                |command| commands::watch::register(command),
-            ).await {
-                eprintln!("an error occured while registering \"watch\" command: {}", e)
-            }
+            &ctx.http,
+            |command| commands::watch::register(command),
+        )
+        .await
+        {
+            eprintln!(
+                "an error occured while registering \"watch\" command: {}",
+                e
+            )
+        }
     }
 }
 
