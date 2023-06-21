@@ -50,7 +50,7 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
             let channel_id_format = format!("{}{}{}", "<", &channel_id, ">");
             // toggle is "true"
             unsafe {
-                if let Some(_) = &BACKGROUND_TASK {
+                if BACKGROUND_TASK.is_some() {
                     command
                         .create_interaction_response(&ctx.http, |message| {
                             message.interaction_response_data(|content| {
@@ -117,22 +117,20 @@ async fn background_task(ctx: &Context, channel_id: &ChannelId) {
             let latest_message_id = latest_message.id.0;
 
             if let Some(last_id) = last_message_id {
-                if last_id != latest_message_id {
-                    if !latest_message.author.bot {
-                        if latest_message.attachments.iter().any(|a| !a.url.is_empty()) {
-                            let mut attachment_vec = Vec::new();
-                            for attachment in &latest_message.attachments {
-                                attachment_vec.push(attachment);
-                            }
-                            for i in attachment_vec
-                                .iter()
-                                .map(|attachment| attachment.url.clone())
-                            {
-                                commands::index::parse(i).await;
-                            }
-                        } else {
-                            commands::index::parse(latest_message.content.to_string()).await;
+                if last_id != latest_message_id && !latest_message.author.bot {
+                    if latest_message.attachments.iter().any(|a| !a.url.is_empty()) {
+                        let mut attachment_vec = Vec::new();
+                        for attachment in &latest_message.attachments {
+                            attachment_vec.push(attachment);
                         }
+                        for i in attachment_vec
+                            .iter()
+                            .map(|attachment| attachment.url.clone())
+                        {
+                            commands::index::parse(i).await;
+                        }
+                    } else {
+                        commands::index::parse(latest_message.content.to_string()).await;
                     }
                 }
             }
