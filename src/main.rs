@@ -1,13 +1,10 @@
 mod commands;
 
-use std::collections::HashMap;
 use std::env;
-use std::sync::{Arc, Mutex};
 
-use serenity::model::prelude::{Activity, ChannelId, Ready};
+use serenity::model::prelude::{Activity, Ready};
 use serenity::prelude::*;
 use serenity::{async_trait, model};
-use tokio::task::JoinHandle;
 
 struct Handler;
 
@@ -120,8 +117,6 @@ impl EventHandler for Handler {
 
 #[tokio::main]
 async fn main() {
-    let _watch_map: Arc<Mutex<HashMap<ChannelId, JoinHandle<()>>>> =
-        Arc::new(Mutex::new(HashMap::new()));
     // Configure the client with your Discord bot token in the environment.
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
     // Set gateway intents, which decides what events the bot will be notified about
