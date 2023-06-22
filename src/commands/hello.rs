@@ -7,6 +7,7 @@ use serenity::{
     prelude::Context,
 };
 
+/// function that gets executed when the command is run
 pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
     let greetings = [
         "Hallo",
@@ -46,6 +47,7 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
         .unwrap();
 }
 
+/// function that registers the command with the discord api
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command.name("hello").description("hallo sagen jtz")
 }

@@ -14,7 +14,7 @@ use serenity::{
     prelude::Context,
 };
 
-// run the command
+/// function that gets executed when the command is run
 pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
     let option = interaction
         .data
@@ -93,7 +93,7 @@ async fn index(ctx: &Context, channel: &PartialChannel, opt: &[CommandDataOption
     }
 }
 
-// dont index attachments
+/// dont index attachments
 async fn index_all_messages(messages: Vec<Message>) {
     if let Err(why) = fs::create_dir_all("./download/") {
         eprintln!("error creating file: {}", why);
@@ -115,7 +115,7 @@ async fn index_all_messages(messages: Vec<Message>) {
     }
 }
 
-// ONLY index attachments
+/// ONLY index attachments
 async fn index_images(messages: Vec<Message>) {
     let mut attachment_vec: Vec<Attachment> = Vec::new();
     let mut link_vec: Vec<String> = Vec::new();
@@ -159,7 +159,7 @@ async fn index_images(messages: Vec<Message>) {
     }
 }
 
-// parse the messages/attachments to the file "output.txt"
+/// parse the messages/attachments to the file "output.txt"
 pub async fn parse(content: String) {
     if let Err(why) = fs::create_dir_all("./download/") {
         eprintln!("error creating file: {}", why);
@@ -175,6 +175,7 @@ pub async fn parse(content: String) {
     };
 }
 
+/// function that registers the command with the discord api
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
         .name("index")

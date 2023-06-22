@@ -22,6 +22,7 @@ use serenity::{
     prelude::Context,
 };
 
+/// function that gets executed when the command is run
 pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
     let command_option = interaction
         .data
@@ -86,7 +87,7 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
     }
 }
 
-// read the urls from the file "output.txt"
+/// read the urls from the file "output.txt" for them to be downloaded
 async fn read_file() {
     let file = File::open("./download/output.txt").await.unwrap();
     let mut lines = io::BufReader::new(file).lines();
@@ -99,7 +100,7 @@ async fn read_file() {
     }
 }
 
-// use Reqwest crate to download the url from cdn.discord.com or whatever with the file name and extension of the original file.
+/// use Reqwest crate to download the url from cdn.discord.com or whatever with the file name and extension of the original file.
 async fn download_file(url: String) {
     let client = Client::new();
     let response = client.get(&url).send().await.unwrap();
@@ -137,6 +138,7 @@ async fn download_file(url: String) {
     file.write_all(&response_file).await.unwrap();
 }
 
+/// function that registers the command with the discord api
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
         .name("download")

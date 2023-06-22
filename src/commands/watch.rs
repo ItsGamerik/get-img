@@ -12,6 +12,7 @@ use tokio::task::{self};
 
 static mut BACKGROUND_TASK: Option<task::JoinHandle<()>> = None;
 
+/// function that gets executed when the command is run
 pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
     // get the command options etcetc
     let option_channel = command
@@ -105,6 +106,8 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
     }
 }
 
+/// background task for keeping track of selected channel.
+/// will run i a separate thread
 async fn background_task(ctx: &Context, channel_id: &ChannelId) {
     let mut last_message_id: Option<u64> = None;
     loop {
@@ -143,6 +146,7 @@ async fn background_task(ctx: &Context, channel_id: &ChannelId) {
     }
 }
 
+/// function that registers the command with the discord api
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
         .name("watch")
