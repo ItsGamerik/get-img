@@ -37,7 +37,7 @@ impl EventHandler for Handler {
         println!("{} is connected!", ready.user.name);
 
         // set status of bot
-        let activity = Activity::watching("v1.1.0");
+        let activity = Activity::watching("v1.1");
         ctx.set_activity(activity).await;
 
         // register guild-specific command, does not take as long to update
@@ -57,58 +57,7 @@ impl EventHandler for Handler {
 
         // global command registering
         // TODO: handle this better altogether
-
-        // hello command
-        if let Err(e) = model::prelude::command::Command::create_global_application_command(
-            &ctx.http,
-            |command| commands::hello::register(command),
-        )
-        .await
-        {
-            eprintln!(
-                "an error occured while registering \"hello\" command: {}",
-                e
-            )
-        }
-
-        // index command
-        if let Err(e) = model::prelude::command::Command::create_global_application_command(
-            &ctx.http,
-            |command| commands::index::register(command),
-        )
-        .await
-        {
-            eprintln!(
-                "an error occured while registering \"index\" command: {}",
-                e
-            )
-        }
-
-        // download command
-        if let Err(e) = model::prelude::command::Command::create_global_application_command(
-            &ctx.http,
-            |command| commands::download::register(command),
-        )
-        .await
-        {
-            eprintln!(
-                "an error occured while registering \"download\" command: {}",
-                e
-            )
-        }
-
-        // watch command
-        if let Err(e) = model::prelude::command::Command::create_global_application_command(
-            &ctx.http,
-            |command| commands::watch::register(command),
-        )
-        .await
-        {
-            eprintln!(
-                "an error occured while registering \"watch\" command: {}",
-                e
-            )
-        }
+        init_commands(&ctx).await;
     }
 }
 
@@ -126,5 +75,68 @@ async fn main() {
 
     if let Err(why) = client.start().await {
         println!("Client error: {:?}", why);
+    }
+}
+
+/// register commands function
+async fn init_commands(ctx: &Context) {
+    // hello command
+    if let Err(e) =
+        model::prelude::command::Command::create_global_application_command(&ctx.http, |command| {
+            commands::hello::register(command)
+        })
+        .await
+    {
+        eprintln!(
+            "an error occured while registering \"hello\" command: {}",
+            e
+        )
+    } else {
+        println!("registered hello command!");
+    }
+
+    // index command
+    if let Err(e) =
+        model::prelude::command::Command::create_global_application_command(&ctx.http, |command| {
+            commands::index::register(command)
+        })
+        .await
+    {
+        eprintln!(
+            "an error occured while registering \"index\" command: {}",
+            e
+        )
+    } else {
+        println!("registered index command!");
+    }
+
+    // download command
+    if let Err(e) =
+        model::prelude::command::Command::create_global_application_command(&ctx.http, |command| {
+            commands::download::register(command)
+        })
+        .await
+    {
+        eprintln!(
+            "an error occured while registering \"download\" command: {}",
+            e
+        )
+    } else {
+        println!("registered download command!");
+    }
+
+    // watch command
+    if let Err(e) =
+        model::prelude::command::Command::create_global_application_command(&ctx.http, |command| {
+            commands::watch::register(command)
+        })
+        .await
+    {
+        eprintln!(
+            "an error occured while registering \"watch\" command: {}",
+            e
+        )
+    } else {
+        println!("registered watch command!");
     }
 }
