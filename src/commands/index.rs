@@ -30,32 +30,20 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
             "added messages from channel **{}** to index",
             channel.name.as_ref().unwrap()
         );
-        interaction
-            .create_interaction_response(&ctx.http, |response| {
-                response
-                    .kind(InteractionResponseType::DeferredChannelMessageWithSource)
-                    .interaction_response_data(|data| data.content("index channel...".to_string()))
-            })
-            .await
-            .unwrap();
+        status_message(ctx, "indexing channel...", interaction).await;
+
         index(ctx, channel, &interaction.data.options).await;
+
         interaction
             .create_followup_message(&ctx.http, |response| response.content(response_string))
             .await
             .unwrap();
     } else {
-        interaction
-            .create_interaction_response(&ctx.http, |response| {
-                response
-                    .kind(InteractionResponseType::ChannelMessageWithSource)
-                    .interaction_response_data(|data| data.content("an error occured".to_string()))
-            })
-            .await
-            .unwrap();
+        status_message(ctx, "an error occured", interaction).await;
     }
 }
 
-// used to index the selected channel depending on wether or not "only_images" is true or false
+/// used to index the selected channel depending on wether or not "only_images" is true or false
 async fn index(ctx: &Context, channel: &PartialChannel, opt: &[CommandDataOption]) {
     let message_vector = channel
         .id
@@ -195,4 +183,15 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
                 .required(true)
         })
         .default_member_permissions(Permissions::ADMINISTRATOR)
+}
+
+async fn status_message(ctx: &Context, msg: &str, interaction: &ApplicationCommandInteraction) {
+    interaction
+        .create_interaction_response(&ctx.http, |response| {
+            response
+                .kind(InteractionResponseType::ChannelMessageWithSource)
+                .interaction_response_data(|data| data.content(msg.to_string()))
+        })
+        .await
+        .unwrap();
 }
