@@ -4,7 +4,8 @@
 
 ## Description
 
-Index images in a discord channel with a simple command and save the links to a file.
+Index images and messages in a discord channel with a simple command and save the content to a file.
+you can either only save the attachments of the messages or a csv-style file containing the author, content and timestamp of all messages in a discord channel.
 
 ## Usage
 
