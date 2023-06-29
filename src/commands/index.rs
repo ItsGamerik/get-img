@@ -34,10 +34,9 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
 
         index(ctx, channel, &interaction.data.options).await;
 
-        interaction
-            .create_followup_message(&ctx.http, |response| response.content(response_string))
-            .await
-            .unwrap();
+        interaction.edit_original_interaction_response(&ctx.http, |response| {
+            response.content(response_string)
+        }).await.unwrap();
     } else {
         status_message(ctx, "an error occured", interaction).await;
     }
