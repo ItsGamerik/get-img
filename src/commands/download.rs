@@ -34,6 +34,7 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
         .expect("expected user object");
 
     let path = Path::new("./download/output.txt");
+
     interaction
         .create_interaction_response(&ctx.http, |response| {
             response
@@ -42,6 +43,7 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
         })
         .await
         .unwrap();
+
     if let Ok(meta) = fs::metadata(path).await {
         if meta.is_file() {
             read_file().await;
@@ -54,6 +56,7 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
                     })
                     .await
                     .unwrap();
+
                 fs::remove_file("./download/output.txt")
                     .unwrap_or_else(|_| ())
                     .await;
@@ -64,6 +67,7 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
                     })
                     .await
                     .unwrap();
+
                 fs::remove_file("./download/output.txt")
                     .unwrap_or_else(|_| ())
                     .await;
@@ -89,7 +93,16 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
 
 /// read the urls from the file "output.txt" for them to be downloaded
 async fn read_file() {
-    let file = File::open("./download/output.txt").await.unwrap();
+    let file = match File::open("./download/output.txt").await {
+        Ok(file) => file,
+        Err(e) => {
+            eprintln!(
+                "an error occured whilst trying to read \"output.txt\": {}",
+                e
+            );
+            return;
+        }
+    };
     let mut lines = io::BufReader::new(file).lines();
     let search_string = "cdn.discordapp.com";
     while let Some(line) = lines.next_line().await.unwrap() {
@@ -104,31 +117,22 @@ async fn read_file() {
 async fn download_file(url: String) {
     let client = Client::new();
     let response = client.get(&url).send().await.unwrap();
-    let content_type = response
-        .headers()
-        .get("content-type")
-        .unwrap()
-        .to_str()
-        .unwrap();
-    let extension = content_type.split('/').nth(1).unwrap_or("bin");
     let file_name = PathBuf::from(&url)
         .file_name()
         .unwrap()
         .to_str()
         .unwrap()
-        .to_owned()
-        + "."
-        + extension;
+        .to_owned(); // filename + extension name
     let mut file_path = PathBuf::from("./download/").join(&file_name);
 
+    // increment the index by 1 everytime the filename already exists, and add it to the beginning of the file name
     let mut index = 0;
     while file_path.exists() {
         index += 1;
         let new_file_name = format!(
-            "{}-{}.{}",
-            &file_name[..file_name.len() - extension.len() - 1],
+            "{}.{}",
             index,
-            extension
+            file_name,
         );
         file_path.set_file_name(new_file_name);
     }
