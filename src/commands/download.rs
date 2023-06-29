@@ -43,7 +43,7 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
         })
         .await
         .unwrap();
-    
+
     if let Ok(meta) = fs::metadata(path).await {
         if meta.is_file() {
             read_file().await;
@@ -56,6 +56,7 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
                     })
                     .await
                     .unwrap();
+
                 fs::remove_file("./download/output.txt")
                     .unwrap_or_else(|_| ())
                     .await;
@@ -66,6 +67,7 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
                     })
                     .await
                     .unwrap();
+
                 fs::remove_file("./download/output.txt")
                     .unwrap_or_else(|_| ())
                     .await;
@@ -115,31 +117,22 @@ async fn read_file() {
 async fn download_file(url: String) {
     let client = Client::new();
     let response = client.get(&url).send().await.unwrap();
-    let content_type = response
-        .headers()
-        .get("content-type")
-        .unwrap()
-        .to_str()
-        .unwrap();
-    let extension = content_type.split('/').nth(1).unwrap_or("bin"); // default to ".bin" file extension when there is none
     let file_name = PathBuf::from(&url)
         .file_name()
         .unwrap()
         .to_str()
         .unwrap()
-        .to_owned()
-        + "."
-        + extension;
+        .to_owned(); // filename + extension name
     let mut file_path = PathBuf::from("./download/").join(&file_name);
 
+    // increment the index by 1 everytime the filename already exists, and add it to the beginning of the file name
     let mut index = 0;
     while file_path.exists() {
         index += 1;
         let new_file_name = format!(
-            "{}-{}.{}",
-            &file_name[..file_name.len() - extension.len() - 1],
+            "{}.{}",
             index,
-            extension
+            file_name,
         );
         file_path.set_file_name(new_file_name);
     }
