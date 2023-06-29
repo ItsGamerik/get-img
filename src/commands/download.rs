@@ -34,6 +34,7 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
         .expect("expected user object");
 
     let path = Path::new("./download/output.txt");
+
     interaction
         .create_interaction_response(&ctx.http, |response| {
             response
@@ -42,6 +43,7 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
         })
         .await
         .unwrap();
+    
     if let Ok(meta) = fs::metadata(path).await {
         if meta.is_file() {
             read_file().await;
@@ -89,7 +91,16 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
 
 /// read the urls from the file "output.txt" for them to be downloaded
 async fn read_file() {
-    let file = File::open("./download/output.txt").await.unwrap();
+    let file = match File::open("./download/output.txt").await {
+        Ok(file) => file,
+        Err(e) => {
+            eprintln!(
+                "an error occured whilst trying to read \"output.txt\": {}",
+                e
+            );
+            return;
+        }
+    };
     let mut lines = io::BufReader::new(file).lines();
     let search_string = "cdn.discordapp.com";
     while let Some(line) = lines.next_line().await.unwrap() {
@@ -110,7 +121,7 @@ async fn download_file(url: String) {
         .unwrap()
         .to_str()
         .unwrap();
-    let extension = content_type.split('/').nth(1).unwrap_or("bin");
+    let extension = content_type.split('/').nth(1).unwrap_or("bin"); // default to ".bin" file extension when there is none
     let file_name = PathBuf::from(&url)
         .file_name()
         .unwrap()
