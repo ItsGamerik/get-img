@@ -114,6 +114,7 @@ async fn read_file() {
 }
 
 /// use Reqwest crate to download the url from cdn.discord.com or whatever with the file name and extension of the original file.
+/// minimum permission level: ADMINISTRATOR
 async fn download_file(url: String) {
     let client = Client::new();
     let response = client.get(&url).send().await.unwrap();
@@ -129,11 +130,7 @@ async fn download_file(url: String) {
     let mut index = 0;
     while file_path.exists() {
         index += 1;
-        let new_file_name = format!(
-            "{}.{}",
-            index,
-            file_name,
-        );
+        let new_file_name = format!("{}.{}", index, file_name,);
         file_path.set_file_name(new_file_name);
     }
 

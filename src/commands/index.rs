@@ -34,9 +34,12 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
 
         index(ctx, channel, &interaction.data.options).await;
 
-        interaction.edit_original_interaction_response(&ctx.http, |response| {
-            response.content(response_string)
-        }).await.unwrap();
+        interaction
+            .edit_original_interaction_response(&ctx.http, |response| {
+                response.content(response_string)
+            })
+            .await
+            .unwrap();
     } else {
         status_message(ctx, "an error occured", interaction).await;
     }
@@ -162,7 +165,19 @@ pub async fn parse(content: String) {
     };
 }
 
+async fn status_message(ctx: &Context, msg: &str, interaction: &ApplicationCommandInteraction) {
+    interaction
+        .create_interaction_response(&ctx.http, |response| {
+            response
+                .kind(InteractionResponseType::ChannelMessageWithSource)
+                .interaction_response_data(|data| data.content(msg.to_string()))
+        })
+        .await
+        .unwrap();
+}
+
 /// function that registers the command with the discord api
+/// minimum permission level: ADMINISTRATOR
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
         .name("index")
@@ -182,15 +197,4 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
                 .required(true)
         })
         .default_member_permissions(Permissions::ADMINISTRATOR)
-}
-
-async fn status_message(ctx: &Context, msg: &str, interaction: &ApplicationCommandInteraction) {
-    interaction
-        .create_interaction_response(&ctx.http, |response| {
-            response
-                .kind(InteractionResponseType::ChannelMessageWithSource)
-                .interaction_response_data(|data| data.content(msg.to_string()))
-        })
-        .await
-        .unwrap();
 }

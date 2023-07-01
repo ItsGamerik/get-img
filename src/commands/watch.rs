@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
-use serenity::builder::CreateApplicationCommand;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOptionValue;
 use serenity::model::prelude::ChannelId;
 use serenity::prelude::Context;
+use serenity::{builder::CreateApplicationCommand, model::Permissions};
 // try and use the correct imports :)
 use crate::commands::{self};
 use tokio::task::{self};
@@ -147,6 +147,7 @@ async fn background_task(ctx: &Context, channel_id: &ChannelId) {
 }
 
 /// function that registers the command with the discord api
+/// minimum permission level: ADMINISTRATOR
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
         .name("watch")
@@ -165,4 +166,5 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
                 .kind(CommandOptionType::Boolean)
                 .required(true)
         })
+        .default_member_permissions(Permissions::ADMINISTRATOR)
 }

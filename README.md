@@ -44,6 +44,14 @@ command to set your environment variable.
 /watch [channel] [bool]     toggles the automatic indexing for a single channel on and off, can only be ON for one channel at a time.
 ```
 
+you have to be an administrator of the discord server you are using the bot in to be able to use the commands:  
+
+- /index
+
+- /download
+
+- /watch
+
 ## Setting up a bot through Discord
 
 1. Go to the [Discord Developer page](https://discord.com/developers/applications).
