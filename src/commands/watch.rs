@@ -6,16 +6,19 @@ use serenity::model::prelude::interaction::application_command::CommandDataOptio
 use serenity::model::prelude::ChannelId;
 use serenity::prelude::Context;
 use serenity::{builder::CreateApplicationCommand, model::Permissions};
+
 // try and use the correct imports :)
 use crate::commands::{self};
 use tokio::task::{self};
 
+use crate::helper_functions::status_message;
+
 static mut BACKGROUND_TASK: Option<task::JoinHandle<()>> = None;
 
 /// function that gets executed when the command is run
-pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
+pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
     // get the command options etcetc
-    let option_channel = command
+    let option_channel = interaction
         .data
         .options
         .get(0)
@@ -23,7 +26,7 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
         .resolved
         .as_ref()
         .expect("expected user object");
-    let option_bool = command
+    let option_bool = interaction
         .data
         .options
         .get(1)
@@ -36,7 +39,7 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
 
     let mut channel_toggle_keys: HashMap<serenity::model::prelude::ChannelId, bool> =
         HashMap::new();
-    let channel_id = command.channel_id;
+    let channel_id = interaction.channel_id;
 
     if let (CommandDataOptionValue::Boolean(value), CommandDataOptionValue::Channel(_channel)) =
         (option_bool, option_channel)
@@ -46,37 +49,20 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
     // thanks to the rust discord :D
 
     // watch channel
+    // TODO: oh lawd this entire statement is a nightmare FIX IT
     if let Some(toggle) = channel_toggle_keys.get(&channel_id) {
         if *toggle {
             let channel_id_format = format!("{}{}{}", "<", &channel_id, ">");
             // toggle is "true"
             unsafe {
                 if BACKGROUND_TASK.is_some() {
-                    command
-                        .create_interaction_response(&ctx.http, |message| {
-                            message.interaction_response_data(|content| {
-                                content.content(
-                                    "could not create watcher: stop watching other channel first",
-                                )
-                            })
-                        })
-                        .await
-                        .unwrap();
+                    status_message(ctx, "could not create watcher: stop watching other channel first.", interaction).await;
                     return;
                 }
             }
             let ctx = ctx.clone();
-            command
-                .create_interaction_response(&ctx.http, |response| {
-                    response.interaction_response_data(|messsage| {
-                        messsage.content(format!(
-                            "creating channel watcher for {}",
-                            channel_id_format
-                        ))
-                    })
-                })
-                .await
-                .unwrap();
+            let response = format!("creating channel watcher for: {}", channel_id_format);
+            status_message(&ctx, &response, interaction).await;
             let task = task::spawn(async move {
                 background_task(&ctx, &channel_id).await;
             });
@@ -94,14 +80,7 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
                     BACKGROUND_TASK = None;
                 }
             }
-            command
-                .create_interaction_response(&ctx.http, |response| {
-                    response.interaction_response_data(|message| {
-                        message.content("stopped watching channel")
-                    })
-                })
-                .await
-                .unwrap();
+            status_message(ctx, "stopped watching channel", interaction).await;
         }
     }
 }

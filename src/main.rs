@@ -1,4 +1,5 @@
 mod commands;
+mod helper_functions;
 
 use std::env;
 
@@ -23,9 +24,7 @@ impl EventHandler for Handler {
                 "index" => commands::index::run(&ctx, &command).await,
                 "hello" => commands::hello::run(&ctx, &command).await,
                 "download" => commands::download::run(&ctx, &command).await,
-                "watch" => {
-                    commands::watch::run(&ctx, &command).await;
-                }
+                "watch" => commands::watch::run(&ctx, &command).await,
                 _ => (),
                 // api ref for discord interactions
                 // https://discord.com/developers/docs/interactions/application-commands

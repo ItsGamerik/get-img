@@ -1,5 +1,7 @@
 use std::path::{Path, PathBuf};
 
+use crate::helper_functions::{status_message, followup_status_message};
+
 use reqwest::Client;
 use tokio::{
     fs::{self, File},
@@ -11,10 +13,7 @@ use serenity::{
     futures::TryFutureExt,
     model::{
         prelude::{
-            interaction::{
-                application_command::{ApplicationCommandInteraction, CommandDataOptionValue},
-                InteractionResponseType,
-            },
+            interaction::application_command::{ApplicationCommandInteraction, CommandDataOptionValue},
             AttachmentType,
         },
         Permissions,
@@ -35,14 +34,8 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
 
     let path = Path::new("./download/output.txt");
 
-    interaction
-        .create_interaction_response(&ctx.http, |response| {
-            response
-                .kind(InteractionResponseType::DeferredChannelMessageWithSource)
-                .interaction_response_data(|data| data.content("downloading attachments..."))
-        })
-        .await
-        .unwrap();
+
+    status_message(ctx, "downloading attachments...", interaction).await;
 
     if let Ok(meta) = fs::metadata(path).await {
         if meta.is_file() {
@@ -61,12 +54,7 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
                     .unwrap_or_else(|_| ())
                     .await;
             } else {
-                interaction
-                    .create_followup_message(&ctx.http, |response| {
-                        response.content("downloaded attachments!")
-                    })
-                    .await
-                    .unwrap();
+                followup_status_message(ctx, "downloaded attachments!", interaction).await;
 
                 fs::remove_file("./download/output.txt")
                     .unwrap_or_else(|_| ())
@@ -74,22 +62,14 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
             }
             println!("done downloading files from output.txt file.");
         } else {
-            interaction
-                .create_followup_message(&ctx.http, |response| {
-                    response.content("An error occured, contact the dev to check logs.")
-                })
-                .await
-                .unwrap();
+            followup_status_message(ctx, "an error has occured, check logs!", interaction).await;
         }
     } else {
-        interaction
-            .create_followup_message(&ctx.http, |response| {
-                response.content("Not yet indexed. Try using `/index` first.")
-            })
-            .await
-            .unwrap();
+        followup_status_message(ctx, "Not indexed yet. Try using `/index` first.", interaction).await;
     }
 }
+
+
 
 /// read the urls from the file "output.txt" for them to be downloaded
 async fn read_file() {

@@ -1,8 +1,9 @@
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 
+use crate::helper_functions::{edit_status_message, status_message};
+
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
-use serenity::model::prelude::interaction::InteractionResponseType;
 use serenity::model::prelude::{Attachment, Message};
 use serenity::model::Permissions;
 use serenity::{
@@ -34,12 +35,7 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
 
         index(ctx, channel, &interaction.data.options).await;
 
-        interaction
-            .edit_original_interaction_response(&ctx.http, |response| {
-                response.content(response_string)
-            })
-            .await
-            .unwrap();
+        edit_status_message(interaction, ctx, &response_string).await;
     } else {
         status_message(ctx, "an error occured", interaction).await;
     }
@@ -163,17 +159,6 @@ pub async fn parse(content: String) {
     if let Err(why) = writeln!(file, "{content}") {
         eprintln!("error while writing to file: {}", why);
     };
-}
-
-async fn status_message(ctx: &Context, msg: &str, interaction: &ApplicationCommandInteraction) {
-    interaction
-        .create_interaction_response(&ctx.http, |response| {
-            response
-                .kind(InteractionResponseType::ChannelMessageWithSource)
-                .interaction_response_data(|data| data.content(msg.to_string()))
-        })
-        .await
-        .unwrap();
 }
 
 /// function that registers the command with the discord api
