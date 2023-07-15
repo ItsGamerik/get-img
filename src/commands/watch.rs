@@ -56,7 +56,12 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
             // toggle is "true"
             unsafe {
                 if BACKGROUND_TASK.is_some() {
-                    status_message(ctx, "could not create watcher: stop watching other channel first.", interaction).await;
+                    status_message(
+                        ctx,
+                        "could not create watcher: stop watching other channel first.",
+                        interaction,
+                    )
+                    .await;
                     return;
                 }
             }

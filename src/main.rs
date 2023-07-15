@@ -3,8 +3,8 @@ mod helper_functions;
 
 use std::env;
 
-use serenity::model::prelude::{Activity, Ready};
 use serenity::model::prelude::GuildId;
+use serenity::model::prelude::{Activity, Ready};
 use serenity::prelude::*;
 use serenity::{async_trait, model};
 

@@ -80,7 +80,7 @@ async fn index(ctx: &Context, channel: &PartialChannel, opt: &[CommandDataOption
 }
 
 /// dont index attachments
-async fn index_all_messages(messages: Vec<Message>) {
+pub async fn index_all_messages(messages: Vec<Message>) {
     if let Err(why) = fs::create_dir_all("./download/") {
         eprintln!("error creating file: {}", why);
     }
