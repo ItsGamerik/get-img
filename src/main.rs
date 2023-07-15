@@ -43,18 +43,18 @@ impl EventHandler for Handler {
 
         // register guild-specific command, does not take as long to update
 
-        let guild_id = GuildId(
-            env::var("GUILD_ID")
-                .expect("guild id expected")
-                .parse()
-                .expect("guild id has to be a valid integer"),
-        );
+        // let guild_id = GuildId(
+        //     env::var("GUILD_ID")
+        //         .expect("guild id expected")
+        //         .parse()
+        //         .expect("guild id has to be a valid integer"),
+        // );
 
-        let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
-            commands.create_application_command(|command| commands::indexall::register(command))
-        })
-        .await;
-        println!("guild commands created: {:#?}", commands);
+        // let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
+        //     commands.create_application_command(|command| commands::indexall::register(command))
+        // })
+        // .await;
+        // println!("guild commands created: {:#?}", commands);
 
         // global command registering
         // TODO: handle this better altogether
@@ -140,13 +140,13 @@ async fn init_commands(ctx: &Context) {
     }
 
     // indexall command
-    // if let Err(e) = model::prelude::command::Command::create_global_application_command(&ctx.http, |command| {
-    //     commands::indexall::register(command)
-    // }).await {
-    //     eprintln!(
-    //         "an error occured while registering \"indexall\" command: {}", e
-    //     )
-    // } else {
-    //     println!("registerd indexall command!");
-    // }
+    if let Err(e) = model::prelude::command::Command::create_global_application_command(&ctx.http, |command| {
+        commands::indexall::register(command)
+    }).await {
+        eprintln!(
+            "an error occured while registering \"indexall\" command: {}", e
+        )
+    } else {
+        println!("registerd indexall command!");
+    }
 }
