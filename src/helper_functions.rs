@@ -30,11 +30,13 @@ pub async fn edit_status_message(
 }
 
 /// create followup message
-pub async fn followup_status_message(ctx: &Context, response_string: &str, interaction: &ApplicationCommandInteraction) {
+pub async fn followup_status_message(
+    ctx: &Context,
+    response_string: &str,
+    interaction: &ApplicationCommandInteraction,
+) {
     interaction
-        .create_followup_message(&ctx.http, |response| {
-            response.content(response_string)
-        })
+        .create_followup_message(&ctx.http, |response| response.content(response_string))
         .await
         .unwrap();
 }

@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use crate::helper_functions::{status_message, followup_status_message};
+use crate::helper_functions::{followup_status_message, status_message};
 
 use reqwest::Client;
 use tokio::{
@@ -13,7 +13,9 @@ use serenity::{
     futures::TryFutureExt,
     model::{
         prelude::{
-            interaction::application_command::{ApplicationCommandInteraction, CommandDataOptionValue},
+            interaction::application_command::{
+                ApplicationCommandInteraction, CommandDataOptionValue,
+            },
             AttachmentType,
         },
         Permissions,
@@ -33,7 +35,6 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
         .expect("expected user object");
 
     let path = Path::new("./download/output.txt");
-
 
     status_message(ctx, "downloading attachments...", interaction).await;
 
@@ -65,11 +66,14 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
             followup_status_message(ctx, "an error has occured, check logs!", interaction).await;
         }
     } else {
-        followup_status_message(ctx, "Not indexed yet. Try using `/index` first.", interaction).await;
+        followup_status_message(
+            ctx,
+            "Not indexed yet. Try using `/index` first.",
+            interaction,
+        )
+        .await;
     }
 }
-
-
 
 /// read the urls from the file "output.txt" for them to be downloaded
 async fn read_file() {
