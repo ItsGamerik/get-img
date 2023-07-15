@@ -4,6 +4,7 @@ mod helper_functions;
 use std::env;
 
 use serenity::model::prelude::{Activity, Ready};
+use serenity::model::prelude::GuildId;
 use serenity::prelude::*;
 use serenity::{async_trait, model};
 
@@ -25,6 +26,7 @@ impl EventHandler for Handler {
                 "hello" => commands::hello::run(&ctx, &command).await,
                 "download" => commands::download::run(&ctx, &command).await,
                 "watch" => commands::watch::run(&ctx, &command).await,
+                "indexall" => commands::indexall::run(&ctx, &command).await,
                 _ => (),
                 // api ref for discord interactions
                 // https://discord.com/developers/docs/interactions/application-commands
@@ -36,23 +38,23 @@ impl EventHandler for Handler {
         println!("{} is connected!", ready.user.name);
 
         // set status of bot
-        let activity = Activity::watching("v1.1");
+        let activity = Activity::watching("v1.2");
         ctx.set_activity(activity).await;
 
         // register guild-specific command, does not take as long to update
 
-        // let guild_id = GuildId(
-        //     env::var("GUILD_ID")
-        //         .expect("guild id expected")
-        //         .parse()
-        //         .expect("guild id has to be a valid integer"),
-        // );
+        let guild_id = GuildId(
+            env::var("GUILD_ID")
+                .expect("guild id expected")
+                .parse()
+                .expect("guild id has to be a valid integer"),
+        );
 
-        // let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
-        //     commands.create_application_command(|command| commands::hello::register(command))
-        // })
-        // .await;
-        // println!("guild commands created: {:#?}", commands);
+        let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
+            commands.create_application_command(|command| commands::indexall::register(command))
+        })
+        .await;
+        println!("guild commands created: {:#?}", commands);
 
         // global command registering
         // TODO: handle this better altogether
@@ -136,4 +138,15 @@ async fn init_commands(ctx: &Context) {
     } else {
         println!("registered watch command!");
     }
+
+    // indexall command
+    // if let Err(e) = model::prelude::command::Command::create_global_application_command(&ctx.http, |command| {
+    //     commands::indexall::register(command)
+    // }).await {
+    //     eprintln!(
+    //         "an error occured while registering \"indexall\" command: {}", e
+    //     )
+    // } else {
+    //     println!("registerd indexall command!");
+    // }
 }
