@@ -42,6 +42,7 @@ command to set your environment variable.
 /index [channel] [bool]     index every message with an attachment in a channel, unless "false" is used
 /download                   download the links saved in the output.txt file
 /watch [channel] [bool]     toggles the automatic indexing for a single channel on and off, can only be ON for one channel at a time.
+/indexall                   index all messages of the server the interaction was sent in.
 ```
 
 you have to be an administrator of the discord server you are using the bot in to be able to use the commands:  
@@ -51,6 +52,8 @@ you have to be an administrator of the discord server you are using the bot in t
 - /download
 
 - /watch
+
+- /indexall
 
 ## Setting up a bot through Discord
 
