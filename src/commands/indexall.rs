@@ -21,10 +21,17 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
 }
 
 async fn index_server(ctx: &Context, interaction: &ApplicationCommandInteraction) {
-    let guild_id: u64 = interaction.guild_id.unwrap().into();
+    let guild_channels = match interaction.guild_id.unwrap().channels(&ctx.http).await {
+        Ok(channels) => channels,
+        Err(e) => {
+            eprintln!("could not find any channels to index: {}", e);
+            return;
+        },
+    };
 
-    let channels = serenity::model::prelude::GuildId(guild_id).channels(&ctx.http).await.unwrap();
-    dbg!(channels);
+    for i in guild_channels.values() {
+        println!("found channel: {}", i)
+    }
 
 
 }
