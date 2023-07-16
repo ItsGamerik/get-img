@@ -32,7 +32,7 @@ async fn index_server(ctx: &Context, interaction: &ApplicationCommandInteraction
     for i in guild_channels.values() {
         println!("found channel: {}", i);
         let channel_id: ChannelId = i.into();
-        get_messages(&ctx, channel_id).await;
+        get_messages(ctx, channel_id).await;
     }
 }
 
