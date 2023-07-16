@@ -3,7 +3,7 @@ mod helper_functions;
 
 use std::env;
 
-use serenity::model::prelude::GuildId;
+// use serenity::model::prelude::GuildId;
 use serenity::model::prelude::{Activity, Ready};
 use serenity::prelude::*;
 use serenity::{async_trait, model};
@@ -140,11 +140,15 @@ async fn init_commands(ctx: &Context) {
     }
 
     // indexall command
-    if let Err(e) = model::prelude::command::Command::create_global_application_command(&ctx.http, |command| {
-        commands::indexall::register(command)
-    }).await {
+    if let Err(e) =
+        model::prelude::command::Command::create_global_application_command(&ctx.http, |command| {
+            commands::indexall::register(command)
+        })
+        .await
+    {
         eprintln!(
-            "an error occured while registering \"indexall\" command: {}", e
+            "an error occured while registering \"indexall\" command: {}",
+            e
         )
     } else {
         println!("registerd indexall command!");

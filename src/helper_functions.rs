@@ -19,9 +19,9 @@ pub async fn status_message(ctx: &Context, msg: &str, interaction: &ApplicationC
 
 /// used to edit an already existing status message
 pub async fn edit_status_message(
-    interaction: &ApplicationCommandInteraction,
     ctx: &Context,
     response_string: &str,
+    interaction: &ApplicationCommandInteraction,
 ) {
     interaction
         .edit_original_interaction_response(&ctx.http, |response| response.content(response_string))

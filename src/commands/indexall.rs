@@ -7,8 +7,8 @@ use serenity::{
     prelude::Context,
 };
 
-use crate::helper_functions::{edit_status_message, status_message};
 use crate::commands::index::index_all_messages;
+use crate::helper_functions::{edit_status_message, status_message};
 
 /// function that gets executed when the command is run
 pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
@@ -16,7 +16,8 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
 
     index_server(ctx, interaction).await;
 
-    edit_status_message(interaction, ctx, "done indexing server.").await;
+    println!("done indexing server.");
+    edit_status_message(ctx, "done indexing server.", interaction).await;
 }
 
 async fn index_server(ctx: &Context, interaction: &ApplicationCommandInteraction) {
@@ -75,8 +76,6 @@ async fn get_messages(ctx: &Context, channel_id: ChannelId) {
         one_message_id = messages.last().unwrap().id;
 
         index_all_messages(messages).await;
-
-
     }
 }
 

@@ -35,7 +35,7 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
 
         index(ctx, channel, &interaction.data.options).await;
 
-        edit_status_message(interaction, ctx, &response_string).await;
+        edit_status_message(ctx, &response_string, interaction).await;
     } else {
         status_message(ctx, "an error occured", interaction).await;
     }
