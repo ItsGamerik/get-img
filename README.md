@@ -25,7 +25,7 @@ First, set your Discord bot token as an environment variable:
 export DISCORD_TOKEN=""
 ```
 
-pro tip: make sure to put a space before the "export" comma to hide the command from your history.
+pro tip: make sure to put a space before the "export" to hide the command from your history.
 
 on windows you can use the
 
