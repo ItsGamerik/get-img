@@ -9,7 +9,7 @@ edition = "2021"
 regex = "1.9.1"
 reqwest = "0.11.18"
 serde = { version = "1.0.164", features = ["derive"] }
-serde_json = "1.0.100"
+serde_json = "1.0.103"
 serenity = { version = "0.11.6", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "utils"] }
 tokio = { version = "1.29", features = ["macros", "rt-multi-thread"] }
 
