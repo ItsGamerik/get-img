@@ -355,7 +355,6 @@ dependencies = [
 name = "get-img"
 version = "1.2.3"
 dependencies = [
- "rand",
  "regex",
  "reqwest",
  "serde",
