@@ -38,7 +38,7 @@ command to set your environment variable.
 ### Commands
 
 ```text
-/hello                      say hello in a random language
+/help                       displays the help message
 /index [channel] [bool]     index every message with an attachment in a channel, unless "false" is used
 /download                   download the links saved in the output.txt file
 /watch [channel] [bool]     toggles the automatic indexing for a single channel on and off, can only be ON for one channel at a time.
