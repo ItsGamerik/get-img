@@ -1,7 +1,12 @@
 // this file contains some helper functions
 
 use serenity::{
-    model::{prelude::{application_command::ApplicationCommandInteraction, InteractionResponseType, Activity}, user::OnlineStatus},
+    model::{
+        prelude::{
+            application_command::ApplicationCommandInteraction, Activity, InteractionResponseType,
+        },
+        user::OnlineStatus,
+    },
     prelude::Context,
 };
 
@@ -47,10 +52,12 @@ pub async fn followup_status_message(
 async fn start_action(ctx: &Context) {
     // the status update seems to be very slow, so it probably wont actually show unless a task is started that takes a long time
     let status = OnlineStatus::DoNotDisturb;
-    ctx.set_presence(Some(Activity::watching("currently working...")), status).await;
+    ctx.set_presence(Some(Activity::watching("currently working...")), status)
+        .await;
 }
 
 async fn stop_action(ctx: &Context) {
     let status = OnlineStatus::Online;
-    ctx.set_presence(Some(Activity::watching("v1.2 - ready for work")), status).await;
+    ctx.set_presence(Some(Activity::watching("v1.2 - ready for work")), status)
+        .await;
 }
