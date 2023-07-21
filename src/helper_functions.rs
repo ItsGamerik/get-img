@@ -68,39 +68,49 @@ async fn stop_action(ctx: &Context) {
 
 // used to parse messages into the output.
 // does this one message at a time.
-// TODO: make this
-// pub async fn universal_parser(message: Message, only_attachments: bool) {
-//     let message_author = message.author;
-//     let message_timestamp = message.timestamp;
-//     let message_content = message.content;
-//     let message_attachments: Vec<&Attachment> = message.attachments.iter().collect();
+// TODO: make indexing allways automatically index attachments and text content!
+pub async fn universal_parser(message: Message, only_attachments: bool) {
+    let message_author = message.author;
+    let message_timestamp = message.timestamp;
+    let message_content = message.content;
+    let message_attachments: Vec<&Attachment> = message.attachments.iter().collect();
 
-//     if let Err(e) = fs::create_dir_all("./download/") {
-//         eprintln!("error creating download file: {}", e);
-//     }
+    if let Err(e) = fs::create_dir_all("./download/") {
+        eprintln!("error creating download file: {}", e);
+    }
 
-//     let mut file = match OpenOptions::new()
-//         .write(true)
-//         .create(true)
-//         .append(true)
-//         .open("./download/output.txt")
-//     {
-//         Ok(file) => file,
-//         Err(e) => {
-//             eprintln!("could not open file \"output.txt\": {}", e);
-//             return;
-//         }
-//     };
+    let mut file = match OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(true)
+        .open("./download/output.txt")
+    {
+        Ok(file) => file,
+        Err(e) => {
+            eprintln!("could not open file \"output.txt\": {}", e);
+            return;
+        }
+    };
 
-//     if only_attachments == true {
-//         for i in message_attachments {
+    let mut content_vec = Vec::new();
 
-//         }
-//     } else {
-//         let formatted_message: String = format!("{}, \"{}\", {}", message_author, message_content, message_timestamp);
-//     }
+    if only_attachments {
+        for attachment in message_attachments {
+            let attachment_link = &attachment.url;
+            let formatted_message = format!("{}, {}, {}", message_author, attachment_link, message_timestamp);
+            content_vec.push(formatted_message);
+        }
+    } else {
+        let formatted_message = format!("{}, \"{}\", {}", message_author, message_content, message_timestamp);
+        content_vec.push(formatted_message);
+    };
 
-//     if let Err(e) = writeln!(file, "{formatted_message}") {
-//         eprintln!("error writing to file output.txt: {}", e);
-//     }
-// }
+    let parse_message: String = match content_vec.first() {
+        Some(message) => message.to_owned(),
+        None => return,
+    };
+
+    if let Err(e) = writeln!(file, "{parse_message}") {
+        eprintln!("error writing to file output.txt: {}", e);
+    }
+}
