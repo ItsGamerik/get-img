@@ -23,7 +23,7 @@ impl EventHandler for Handler {
             println!("Received command interaction");
             let _content = match command.data.name.as_str() {
                 "index" => commands::index::run(&ctx, &command).await,
-                "hello" => commands::hello::run(&ctx, &command).await,
+                "help" => commands::help::run(&ctx, &command).await,
                 "download" => commands::download::run(&ctx, &command).await,
                 "watch" => commands::watch::run(&ctx, &command).await,
                 "indexall" => commands::indexall::run(&ctx, &command).await,
@@ -82,7 +82,7 @@ async fn init_commands(ctx: &Context) {
     // hello command
     if let Err(e) =
         model::prelude::command::Command::create_global_application_command(&ctx.http, |command| {
-            commands::hello::register(command)
+            commands::help::register(command)
         })
         .await
     {

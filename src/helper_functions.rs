@@ -65,7 +65,6 @@ async fn stop_action(ctx: &Context) {
     ctx.set_presence(Some(Activity::watching("v1.2 - ready for work")), status)
         .await;
 }
-
 // used to parse messages into the output.
 // does this one message at a time.
 // TODO: make indexing allways automatically index attachments and text content!

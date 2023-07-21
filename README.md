@@ -25,7 +25,7 @@ First, set your Discord bot token as an environment variable:
 export DISCORD_TOKEN=""
 ```
 
-pro tip: make sure to put a space before the "export" comma to hide the command from your history.
+pro tip: make sure to put a space before the "export" to hide the command from your history.
 
 on windows you can use the
 
@@ -38,7 +38,7 @@ command to set your environment variable.
 ### Commands
 
 ```text
-/hello                      say hello in a random language
+/help                       displays the help message
 /index [channel] [bool]     index every message with an attachment in a channel, unless "false" is used
 /download                   download the links saved in the output.txt file
 /watch [channel] [bool]     toggles the automatic indexing for a single channel on and off, can only be ON for one channel at a time.
