@@ -69,11 +69,11 @@ async fn stop_action(ctx: &Context) {
 // used to parse messages into the output.
 // does this one message at a time.
 // TODO: make indexing allways automatically index attachments and text content!
-pub async fn universal_parser(message: Message, only_attachments: bool) {
-    let message_author = message.author;
-    let message_timestamp = message.timestamp;
-    let message_content = message.content;
-    let message_attachments: Vec<&Attachment> = message.attachments.iter().collect();
+pub async fn universal_parser(message: Message) {
+    let message_author: serenity::model::user::User = message.author;
+    let message_timestamp: serenity::model::Timestamp = message.timestamp;
+    let message_content: String = message.content;
+    let message_attachments: Vec<Attachment> = message.attachments;
 
     if let Err(e) = fs::create_dir_all("./download/") {
         eprintln!("error creating download file: {}", e);
@@ -92,25 +92,23 @@ pub async fn universal_parser(message: Message, only_attachments: bool) {
         }
     };
 
-    let mut content_vec = Vec::new();
+    let mut attachment_link_vec = Vec::new();
 
-    if only_attachments {
-        for attachment in message_attachments {
-            let attachment_link = &attachment.url;
-            let formatted_message = format!("{}, {}, {}", message_author, attachment_link, message_timestamp);
-            content_vec.push(formatted_message);
-        }
-    } else {
-        let formatted_message = format!("{}, \"{}\", {}", message_author, message_content, message_timestamp);
-        content_vec.push(formatted_message);
-    };
-
-    let parse_message: String = match content_vec.first() {
-        Some(message) => message.to_owned(),
-        None => return,
-    };
-
-    if let Err(e) = writeln!(file, "{parse_message}") {
-        eprintln!("error writing to file output.txt: {}", e);
+    for attachment in message_attachments {
+        attachment_link_vec.push(attachment.url);
     }
+    let quoted_attachments: Vec<String> = attachment_link_vec.iter().map(|s| format!("\"{}\"", s)).collect();
+
+    let parse_message = format!(
+        "{}, \"{}\", {}, {}",
+        message_author,
+        message_content,
+        quoted_attachments.join(","),
+        message_timestamp
+    );
+
+    println!("{}", parse_message);
+    // if let Err(e) = writeln!(file, "{parse_message}") {
+    //     eprintln!("error writing to file output.txt: {}", e);
+    // }
 }

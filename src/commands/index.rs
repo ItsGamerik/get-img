@@ -1,7 +1,7 @@
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 
-use crate::helper_functions::{edit_status_message, status_message};
+use crate::helper_functions::{edit_status_message, status_message, universal_parser};
 
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::prelude::{Attachment, Message};
@@ -95,9 +95,10 @@ pub async fn index_all_messages(messages: Vec<Message>) {
         eprintln!("error writing to file: {}", e);
     };
     for message in messages {
-        let content = message.content;
-        let msg_string = format!("{}, \"{}\",{},", message.author, content, message.timestamp);
-        parse(msg_string).await;
+        universal_parser(message).await;
+        // let content = message.content;
+        // let msg_string = format!("{}, \"{}\",{},", message.author, content, message.timestamp);
+        // parse(msg_string).await;
     }
 }
 
