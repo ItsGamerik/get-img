@@ -97,13 +97,13 @@ pub async fn universal_parser(message: Message) {
     for attachment in message_attachments {
         attachment_link_vec.push(attachment.url);
     }
-    let quoted_attachments: Vec<String> = attachment_link_vec.iter().map(|s| format!("\"{}\"", s)).collect();
+    let quoted_attachments: Vec<String> = attachment_link_vec.iter().map(|s| format!("\'{}\'", s)).collect();
 
     let parse_message = format!(
-        "{}, \"{}\", {}, {}",
+        "{}, \"{}\", \"{}\", {}",
         message_author,
         message_content,
-        quoted_attachments.join(","),
+        quoted_attachments.join(" "),
         message_timestamp
     );
 

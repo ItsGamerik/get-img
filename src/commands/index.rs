@@ -90,7 +90,7 @@ pub async fn index_all_messages(messages: Vec<Message>) {
         .append(true)
         .open("./download/output.txt")
         .unwrap();
-    let header_string = "userid,message,timestamp".to_string();
+    let header_string = "userid,message,attachments,timestamp".to_string();
     if let Err(e) = writeln!(file, "{header_string}") {
         eprintln!("error writing to file: {}", e);
     };
