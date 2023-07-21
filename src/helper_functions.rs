@@ -65,9 +65,8 @@ async fn stop_action(ctx: &Context) {
     ctx.set_presence(Some(Activity::watching("v1.2 - ready for work")), status)
         .await;
 }
-// used to parse messages into the output.
-// does this one message at a time.
-// TODO: make indexing allways automatically index attachments and text content!
+/// used to parse messages into the output.
+/// does this one message at a time.
 pub async fn universal_parser(message: Message) {
     let message_author: serenity::model::user::User = message.author;
     let message_timestamp: serenity::model::Timestamp = message.timestamp;
@@ -106,8 +105,7 @@ pub async fn universal_parser(message: Message) {
         message_timestamp
     );
 
-    println!("{}", parse_message);
-    // if let Err(e) = writeln!(file, "{parse_message}") {
-    //     eprintln!("error writing to file output.txt: {}", e);
-    // }
+    if let Err(e) = writeln!(file, "{parse_message}") {
+        eprintln!("error writing to file output.txt: {}", e);
+    }
 }
