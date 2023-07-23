@@ -74,16 +74,6 @@ pub async fn index_all_messages(messages: Vec<Message>) {
     if let Err(why) = fs::create_dir_all("./download/") {
         eprintln!("error creating file: {}", why);
     }
-    let mut file = OpenOptions::new()
-        .write(true)
-        .create(true)
-        .append(true)
-        .open("./download/output.txt")
-        .unwrap();
-    let header_string = "userid,message,attachments,timestamp".to_string();
-    if let Err(e) = writeln!(file, "{header_string}") {
-        eprintln!("error writing to file: {}", e);
-    };
     for message in messages {
         universal_parser(message).await;
     }

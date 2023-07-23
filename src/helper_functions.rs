@@ -1,8 +1,9 @@
 // this file contains some helper functions
 
-use std::fs::{self, OpenOptions};
+use std::fs::{OpenOptions, self};
 use std::io::Write;
 
+use serde::{Serialize, Deserialize};
 use serenity::{
     model::{
         prelude::{
@@ -13,6 +14,15 @@ use serenity::{
     },
     prelude::Context,
 };
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DiscordMessage {
+    timestamp: String,
+    author: String,
+    content: String,
+    // GOOD THAT THIS WORKS
+    attachments: Vec<String>,
+}
 
 /// used to create interaction responses.
 pub async fn status_message(ctx: &Context, msg: &str, interaction: &ApplicationCommandInteraction) {
@@ -72,16 +82,16 @@ pub async fn universal_parser(message: Message) {
     let message_timestamp: serenity::model::Timestamp = message.timestamp;
     let message_content: String = message.content;
     let message_attachments: Vec<Attachment> = message.attachments;
-
+    
     if let Err(e) = fs::create_dir_all("./download/") {
         eprintln!("error creating download file: {}", e);
     }
-
+    
     let mut file = match OpenOptions::new()
-        .write(true)
-        .create(true)
-        .append(true)
-        .open("./download/output.txt")
+    .write(true)
+    .create(true)
+    .append(true)
+    .open("./download/output.txt")
     {
         Ok(file) => file,
         Err(e) => {
@@ -89,23 +99,24 @@ pub async fn universal_parser(message: Message) {
             return;
         }
     };
-
+    
     let mut attachment_link_vec = Vec::new();
-
+    
     for attachment in message_attachments {
         attachment_link_vec.push(attachment.url);
     }
-    let quoted_attachments: Vec<String> = attachment_link_vec.iter().map(|s| format!("\'{}\'", s)).collect();
+        
+        let json_object = DiscordMessage {
+            author: format!("{}", message_author),
+            content: message_content,
+            attachments: attachment_link_vec,
+            timestamp: format!("{}", message_timestamp),
+        };
+    
+        let j = serde_json::to_string(&json_object).unwrap();
+        let print_string = format!("{},", j);
 
-    let parse_message = format!(
-        "{}, \"{}\", \"{}\", {}",
-        message_author,
-        message_content,
-        quoted_attachments.join(" "),
-        message_timestamp
-    );
-
-    if let Err(e) = writeln!(file, "{parse_message}") {
+    if let Err(e) = writeln!(file, "{print_string}") {
         eprintln!("error writing to file output.txt: {}", e);
     }
 }
