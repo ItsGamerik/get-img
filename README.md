@@ -5,7 +5,7 @@
 ## Description
 
 Index images and messages in a discord channel with a simple command and save the content to a file.
-you can either only save the attachments of the messages or a csv-style file containing the author, content and timestamp of all messages in a discord channel.
+you can then download the the file containing all of the messages in a json-like format and additionally automatically download all of the message attachments as well.
 
 ## Usage
 
