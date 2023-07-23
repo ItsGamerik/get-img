@@ -1,9 +1,9 @@
 // this file contains some helper functions
 
-use std::fs::{OpenOptions, self};
+use std::fs::{self, OpenOptions};
 use std::io::Write;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serenity::{
     model::{
         prelude::{
@@ -82,16 +82,16 @@ pub async fn universal_parser(message: Message) {
     let message_timestamp: serenity::model::Timestamp = message.timestamp;
     let message_content: String = message.content;
     let message_attachments: Vec<Attachment> = message.attachments;
-    
+
     if let Err(e) = fs::create_dir_all("./download/") {
         eprintln!("error creating download file: {}", e);
     }
-    
+
     let mut file = match OpenOptions::new()
-    .write(true)
-    .create(true)
-    .append(true)
-    .open("./download/output.txt")
+        .write(true)
+        .create(true)
+        .append(true)
+        .open("./download/output.txt")
     {
         Ok(file) => file,
         Err(e) => {
@@ -99,21 +99,21 @@ pub async fn universal_parser(message: Message) {
             return;
         }
     };
-    
+
     let mut attachment_link_vec = Vec::new();
-    
+
     for attachment in message_attachments {
         attachment_link_vec.push(attachment.url);
     }
-        
-        let json_object = DiscordMessage {
-            author: format!("{}", message_author),
-            content: message_content,
-            attachments: attachment_link_vec,
-            timestamp: format!("{}", message_timestamp),
-        };
-    
-        let j = serde_json::to_string(&json_object).unwrap();
+
+    let json_object = DiscordMessage {
+        author: format!("{}", message_author),
+        content: message_content,
+        attachments: attachment_link_vec,
+        timestamp: format!("{}", message_timestamp),
+    };
+
+    let j = serde_json::to_string(&json_object).unwrap();
 
     // this only create a raw list of json objects containing the messages, for the user download i will have to
     // combine the raw objects into a json array by adding "," to the end of each line
