@@ -131,7 +131,10 @@ async fn download_file(url: String) {
 
     let mut file: File = fs::File::create(&file_path).await.unwrap();
     let response_file = response.bytes().await.unwrap().to_vec();
-    file.write_all(&response_file).await.unwrap();
+    match file.write_all(&response_file).await {
+        Ok(_) => println!("successfully downloaded \"{}\"", file_name),
+        Err(e) => eprintln!("error downloading file: {}", e),
+    };
 }
 
 /// function that registers the command with the discord api
