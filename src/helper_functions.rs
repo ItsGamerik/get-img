@@ -17,11 +17,11 @@ use serenity::{
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DiscordMessage {
-    timestamp: String,
-    author: String,
-    content: String,
+    pub timestamp: String,
+    pub author: String,
+    pub content: String,
     // GOOD THAT THIS WORKS
-    attachments: Vec<String>,
+    pub attachments: Vec<String>,
 }
 
 /// used to create interaction responses.
@@ -114,9 +114,11 @@ pub async fn universal_parser(message: Message) {
         };
     
         let j = serde_json::to_string(&json_object).unwrap();
-        let print_string = format!("{},", j);
 
-    if let Err(e) = writeln!(file, "{print_string}") {
+    // this only create a raw list of json objects containing the messages, for the user download i will have to
+    // combine the raw objects into a json array by adding "," to the end of each line
+    // and adding [] around the objects
+    if let Err(e) = writeln!(file, "{j}") {
         eprintln!("error writing to file output.txt: {}", e);
     }
 }

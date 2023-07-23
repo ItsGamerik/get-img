@@ -79,8 +79,7 @@ pub async fn index_all_messages(messages: Vec<Message>) {
     }
 }
 
-/// parse the messages/attachments to the file "output.txt"
-// still used by watcher, will have to rewrite that entire thing anyways
+/// DO NOT USE
 pub async fn parse(content: String) {
     if let Err(why) = fs::create_dir_all("./download/") {
         eprintln!("error creating file: {}", why);

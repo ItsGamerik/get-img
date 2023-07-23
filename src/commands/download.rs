@@ -1,6 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use crate::helper_functions::{followup_status_message, status_message};
+use crate::helper_functions::DiscordMessage;
 
 use reqwest::Client;
 use tokio::{
@@ -10,14 +11,10 @@ use tokio::{
 
 use serenity::{
     builder::CreateApplicationCommand,
-    futures::TryFutureExt,
     model::{
-        prelude::{
-            interaction::application_command::{
+        prelude::interaction::application_command::{
                 ApplicationCommandInteraction, CommandDataOptionValue,
             },
-            AttachmentType,
-        },
         Permissions,
     },
     prelude::Context,
@@ -41,25 +38,21 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
     if let Ok(meta) = fs::metadata(path).await {
         if meta.is_file() {
             read_file().await;
+            
+            // if dl_to_disk is true
             if let CommandDataOptionValue::Boolean(true) = command_option {
-                interaction
-                    .create_followup_message(&ctx.http, |response| {
-                        response
-                            .content("downloaded attachments!")
-                            .add_file(AttachmentType::Path(path))
-                    })
-                    .await
-                    .unwrap();
-
-                fs::remove_file("./download/output.txt")
-                    .unwrap_or_else(|_| ())
-                    .await;
-            } else {
                 followup_status_message(ctx, "downloaded attachments!", interaction).await;
 
-                fs::remove_file("./download/output.txt")
-                    .unwrap_or_else(|_| ())
-                    .await;
+                // fs::remove_file("./download/output.txt")
+                //     .unwrap_or_else(|_| ())
+                //     .await;
+            } else {
+                // if it is false
+                followup_status_message(ctx, "downloaded attachments!", interaction).await;
+
+                // fs::remove_file("./download/output.txt")
+                //     .unwrap_or_else(|_| ())
+                //     .await;
             }
             println!("done downloading files from output.txt file.");
         } else {
@@ -88,11 +81,11 @@ async fn read_file() {
         }
     };
     let mut lines = io::BufReader::new(file).lines();
-    let search_string = "cdn.discordapp.com";
     while let Some(line) = lines.next_line().await.unwrap() {
-        if line.contains(search_string) {
-            println!("download: {}", line);
-            download_file(line).await;
+        let json: DiscordMessage = serde_json::from_str(&line).unwrap();
+        for link in json.attachments {
+            // this iterates over every link ONCE
+            download_file(link).await;
         }
     }
 }
@@ -130,8 +123,8 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         .description("download the links saved to the output file")
         .create_option(|option| {
             option
-                .name("upload_result")
-                .description("attach the file containing the links")
+                .name("download_to_disk")
+                .description("download attachments to disk")
                 .kind(serenity::model::prelude::command::CommandOptionType::Boolean)
                 .required(true)
         })
