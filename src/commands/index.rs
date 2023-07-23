@@ -8,10 +8,7 @@ use serenity::model::prelude::Message;
 use serenity::model::Permissions;
 use serenity::{
     builder::CreateApplicationCommand,
-    model::prelude::{
-        interaction::application_command::CommandDataOptionValue,
-        PartialChannel,
-    },
+    model::prelude::{interaction::application_command::CommandDataOptionValue, PartialChannel},
     prelude::Context,
 };
 
