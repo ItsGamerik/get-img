@@ -1,14 +1,28 @@
 // this file contains some helper functions
 
+use std::fs::{self, OpenOptions};
+use std::io::Write;
+
+use serde::{Deserialize, Serialize};
 use serenity::{
     model::{
         prelude::{
-            application_command::ApplicationCommandInteraction, Activity, InteractionResponseType,
+            application_command::ApplicationCommandInteraction, Activity, Attachment,
+            InteractionResponseType, Message,
         },
         user::OnlineStatus,
     },
     prelude::Context,
 };
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DiscordMessage {
+    pub timestamp: String,
+    pub author: String,
+    pub content: String,
+    // GOOD THAT THIS WORKS
+    pub attachments: Vec<String>,
+}
 
 /// used to create interaction responses.
 pub async fn status_message(ctx: &Context, msg: &str, interaction: &ApplicationCommandInteraction) {
@@ -60,4 +74,51 @@ async fn stop_action(ctx: &Context) {
     let status = OnlineStatus::Online;
     ctx.set_presence(Some(Activity::watching("v1.2 - ready for work")), status)
         .await;
+}
+/// used to parse messages into the output.
+/// does this one message at a time.
+pub async fn universal_parser(message: Message) {
+    let message_author: serenity::model::user::User = message.author;
+    let message_timestamp: serenity::model::Timestamp = message.timestamp;
+    let message_content: String = message.content;
+    let message_attachments: Vec<Attachment> = message.attachments;
+
+    if let Err(e) = fs::create_dir_all("./download/") {
+        eprintln!("error creating download file: {}", e);
+    }
+
+    let mut file = match OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(true)
+        .open("./download/output.txt")
+    {
+        Ok(file) => file,
+        Err(e) => {
+            eprintln!("could not open file \"output.txt\": {}", e);
+            return;
+        }
+    };
+
+    let mut attachment_link_vec = Vec::new();
+
+    for attachment in message_attachments {
+        attachment_link_vec.push(attachment.url);
+    }
+
+    let json_object = DiscordMessage {
+        author: format!("{}", message_author),
+        content: message_content,
+        attachments: attachment_link_vec,
+        timestamp: format!("{}", message_timestamp),
+    };
+
+    let j = serde_json::to_string(&json_object).unwrap();
+
+    // this only create a raw list of json objects containing the messages, for the user download i will have to
+    // combine the raw objects into a json array by adding "," to the end of each line
+    // and adding [] around the objects
+    if let Err(e) = writeln!(file, "{j}") {
+        eprintln!("error writing to file output.txt: {}", e);
+    }
 }

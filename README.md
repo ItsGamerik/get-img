@@ -39,8 +39,8 @@ command to set your environment variable.
 
 ```text
 /help                       displays the help message
-/index [channel] [bool]     index every message with an attachment in a channel, unless "false" is used
-/download                   download the links saved in the output.txt file
+/index [channel]            index every message with an attachment in a channel.
+/download [bool]            sends the index file into the discord channel, and will download attachments if specified.
 /watch [channel] [bool]     toggles the automatic indexing for a single channel on and off, can only be ON for one channel at a time.
 /indexall                   index all messages of the server the interaction was sent in. Due to API limitations, this can take quite long especially for larger servers. The bots status will indicate the progress.
 ```

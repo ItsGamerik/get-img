@@ -1,8 +1,10 @@
 use std::path::{Path, PathBuf};
 
+use crate::helper_functions::DiscordMessage;
 use crate::helper_functions::{followup_status_message, status_message};
 
 use reqwest::Client;
+use serenity::model::prelude::AttachmentType;
 use tokio::{
     fs::{self, File},
     io::{self, AsyncBufReadExt, AsyncWriteExt},
@@ -10,13 +12,9 @@ use tokio::{
 
 use serenity::{
     builder::CreateApplicationCommand,
-    futures::TryFutureExt,
     model::{
-        prelude::{
-            interaction::application_command::{
-                ApplicationCommandInteraction, CommandDataOptionValue,
-            },
-            AttachmentType,
+        prelude::interaction::application_command::{
+            ApplicationCommandInteraction, CommandDataOptionValue,
         },
         Permissions,
     },
@@ -40,26 +38,27 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
 
     if let Ok(meta) = fs::metadata(path).await {
         if meta.is_file() {
-            read_file().await;
+            // if dl_to_disk is true
             if let CommandDataOptionValue::Boolean(true) = command_option {
+                read_file().await;
                 interaction
-                    .create_followup_message(&ctx.http, |response| {
-                        response
-                            .content("downloaded attachments!")
+                    .create_followup_message(&ctx.http, |message| {
+                        message
+                            .content("downloaded attachments to disk!")
                             .add_file(AttachmentType::Path(path))
                     })
                     .await
                     .unwrap();
-
-                fs::remove_file("./download/output.txt")
-                    .unwrap_or_else(|_| ())
-                    .await;
             } else {
-                followup_status_message(ctx, "downloaded attachments!", interaction).await;
-
-                fs::remove_file("./download/output.txt")
-                    .unwrap_or_else(|_| ())
-                    .await;
+                // if it is false
+                interaction
+                    .create_followup_message(&ctx.http, |message| {
+                        message
+                            .content("here is the list of messages sent!")
+                            .add_file(AttachmentType::Path(path))
+                    })
+                    .await
+                    .unwrap();
             }
             println!("done downloading files from output.txt file.");
         } else {
@@ -88,11 +87,11 @@ async fn read_file() {
         }
     };
     let mut lines = io::BufReader::new(file).lines();
-    let search_string = "cdn.discordapp.com";
     while let Some(line) = lines.next_line().await.unwrap() {
-        if line.contains(search_string) {
-            println!("download: {}", line);
-            download_file(line).await;
+        let json: DiscordMessage = serde_json::from_str(&line).unwrap();
+        for link in json.attachments {
+            // this iterates over every link ONCE
+            download_file(link).await;
         }
     }
 }
@@ -108,7 +107,19 @@ async fn download_file(url: String) {
         .to_str()
         .unwrap()
         .to_owned(); // filename + extension name
-    let mut file_path = PathBuf::from("./download/").join(&file_name);
+
+    let root_path = "./download/attachments/";
+    if fs::metadata(&root_path).await.is_err() {
+        match fs::create_dir_all(&root_path).await {
+            Ok(_) => println!("created attachment download dir, as it did not exist."),
+            Err(e) => {
+                eprintln!("could not create attachment download dir: {}", e);
+                return;
+            }
+        }
+    }
+
+    let mut file_path = PathBuf::from("./download/attachments/").join(&file_name);
 
     // increment the index by 1 everytime the filename already exists, and add it to the beginning of the file name
     let mut index = 0;
@@ -130,8 +141,8 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         .description("download the links saved to the output file")
         .create_option(|option| {
             option
-                .name("upload_result")
-                .description("attach the file containing the links")
+                .name("download_to_disk")
+                .description("download attachments to disk")
                 .kind(serenity::model::prelude::command::CommandOptionType::Boolean)
                 .required(true)
         })
