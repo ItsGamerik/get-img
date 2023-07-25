@@ -38,7 +38,7 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
     }
 }
 
-/// used to index the selected channel depending on wether or not "only_images" is true or false
+/// used to index the selected channel
 async fn index(ctx: &Context, channel: &PartialChannel) {
     let message_vector = channel
         .id
