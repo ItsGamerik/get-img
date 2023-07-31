@@ -62,16 +62,65 @@ async fn index(ctx: &Context, channel: &PartialChannel) {
 
         // try to iterate "upwards" in the channel
         single_message_id = messages.last().unwrap().id;
-        index_all_messages(messages).await;
+        index_all_messages(messages, ctx).await;
     }
 }
 
-/// dont index attachments
-pub async fn index_all_messages(messages: Vec<Message>) {
+/// index all messages and parse them
+pub async fn index_all_messages(messages: Vec<Message>, ctx: &Context) {
     if let Err(why) = fs::create_dir_all("./download/") {
         eprintln!("error creating file: {}", why);
     }
+
+    // check if it is a thread
     for message in messages {
+        if let Some(thread) = &message.thread {
+            let thread_last_message_id = match thread.last_message_id {
+                Some(messageid) => {
+                    println!("found message ({}) in thread: {}", messageid, thread.id);
+                    messageid
+                },
+                None => {
+                    eprintln!("no message could be found for thread {}", thread.id);
+                    return;
+                }
+            };
+
+            let thread_to_message = match thread.message(&ctx.http, thread_last_message_id).await {
+                Ok(message) => message,
+                Err(e) => {
+                    eprintln!("an error occured: {}", e);
+                    return;
+                }
+            };
+
+            // you can treat threads kinda like channels
+            let messages_in_thread = thread_to_message.channel(&ctx.http).await.unwrap().id().messages(&ctx.http, |builder| {
+                builder.limit(1).before(thread_to_message.id)
+            }).await.unwrap();
+
+            let single_message: &Message = messages_in_thread.last().unwrap();
+            let mut single_message_id = single_message.id;
+            loop {
+                let messages = thread_to_message.channel(&ctx.http).await.unwrap()
+                    .id()
+                    .messages(&ctx, |retriever| {
+                        retriever.before(single_message_id).limit(100)
+                    })
+                    .await
+                    .expect("Failed to retrieve messages");
+        
+                if messages.is_empty() {
+                    break;
+                }
+        
+                single_message_id = messages.last().unwrap().id;
+                for message in messages {
+                    universal_parser(message).await;
+                }
+            }
+
+        }
         universal_parser(message).await;
     }
 }

@@ -75,7 +75,7 @@ async fn get_messages(ctx: &Context, channel_id: ChannelId) {
 
         one_message_id = messages.last().unwrap().id;
 
-        index_all_messages(messages).await;
+        index_all_messages(messages, ctx).await;
     }
 }
 
