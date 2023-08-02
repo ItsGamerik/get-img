@@ -34,7 +34,7 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
 
         edit_status_message(ctx, &response_string, interaction).await;
     } else {
-        status_message(ctx, "an error occured", interaction).await;
+        status_message(ctx, "an error occured, check logs", interaction).await;
     }
 }
 
@@ -48,13 +48,19 @@ async fn index(ctx: &Context, channel: &PartialChannel) {
     let single_message: &Message = message_vector.last().unwrap();
     let mut single_message_id = single_message.id;
     loop {
-        let messages = channel
+        let messages = match channel
             .id
             .messages(&ctx, |retriever| {
                 retriever.before(single_message_id).limit(100)
             })
             .await
-            .expect("Failed to retrieve messages");
+        {
+            Ok(messages) => messages,
+            Err(e) => {
+                eprintln!("an error occured while retrieving messages: {}", e);
+                return;
+            }
+        };
 
         if messages.is_empty() {
             break;
@@ -89,7 +95,7 @@ pub async fn index_all_messages(messages: Vec<Message>, ctx: &Context) {
             let thread_to_message = match thread.message(&ctx.http, thread_last_message_id).await {
                 Ok(message) => message,
                 Err(e) => {
-                    eprintln!("an error occured: {}", e);
+                    eprintln!("an error occured trying to get message: {}", e);
                     return;
                 }
             };
@@ -109,7 +115,7 @@ pub async fn index_all_messages(messages: Vec<Message>, ctx: &Context) {
             let single_message: &Message = messages_in_thread.last().unwrap();
             let mut single_message_id = single_message.id;
             loop {
-                let messages = thread_to_message
+                let messages = match thread_to_message
                     .channel(&ctx.http)
                     .await
                     .unwrap()
@@ -118,7 +124,13 @@ pub async fn index_all_messages(messages: Vec<Message>, ctx: &Context) {
                         retriever.before(single_message_id).limit(100)
                     })
                     .await
-                    .expect("Failed to retrieve messages");
+                {
+                    Ok(messages) => messages,
+                    Err(e) => {
+                        eprintln!("an error occured while retrieving messages: {}", e);
+                        return;
+                    }
+                };
 
                 if messages.is_empty() {
                     break;
@@ -135,6 +147,10 @@ pub async fn index_all_messages(messages: Vec<Message>, ctx: &Context) {
 }
 
 /// DO NOT USE
+#[deprecated(
+    since = "1.1.6",
+    note = "use the \"universal_parser()\" function instead"
+)]
 pub async fn parse(content: String) {
     if let Err(why) = fs::create_dir_all("./download/") {
         eprintln!("error creating file: {}", why);
