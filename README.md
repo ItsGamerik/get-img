@@ -4,14 +4,14 @@
 
 ## Description
 
-Index images and messages in a discord channel with a simple command and save the content to a file.
-you can either only save the attachments of the messages or a csv-style file containing the author, content and timestamp of all messages in a discord channel.
+Index attachments and messages (including threads!) in a discord channel or an entire server with a simple command and save the contient to a file.
+Once you have indexed messages, you can download the message list with a command and you can also automatically download all of the attachments that were uploaded to you computer!
 
 ## Usage
 
 ### Building
 
-just use `cargo` for building:
+just use [cargo](https://www.rust-lang.org/tools/install) for building:
 
 ```shell
 cargo build --release && cargo run --release
@@ -42,7 +42,7 @@ command to set your environment variable.
 /index [channel]            index every message with an attachment in a channel.
 /download [bool]            sends the index file into the discord channel, and will download attachments if specified.
 /watch [channel] [bool]     toggles the automatic indexing for a single channel on and off, can only be ON for one channel at a time.
-/indexall                   index all messages of the server the interaction was sent in. Due to API limitations, this can take quite long especially for larger servers. The bots status will indicate the progress.
+/indexall                   index all messages of the server where the interaction was sent. Due to API limitations, this can take quite a long time, especially for larger servers. Progress is indicated by the bot's status.
 ```
 
 you have to be an administrator of the discord server you are using the bot in to be able to use the commands:  
