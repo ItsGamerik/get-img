@@ -38,7 +38,7 @@ impl EventHandler for Handler {
         println!("{} is connected!", ready.user.name);
 
         // set status of bot
-        let activity = Activity::watching("v1.2 - ready for work");
+        let activity = Activity::watching("v1.3 - ready for work");
         ctx.set_activity(activity).await;
 
         // register guild-specific command, does not take as long to update

@@ -72,7 +72,7 @@ async fn start_action(ctx: &Context) {
 
 async fn stop_action(ctx: &Context) {
     let status = OnlineStatus::Online;
-    ctx.set_presence(Some(Activity::watching("v1.2 - ready for work")), status)
+    ctx.set_presence(Some(Activity::watching("v1.3 - ready for work")), status)
         .await;
 }
 /// used to parse messages into the output.
