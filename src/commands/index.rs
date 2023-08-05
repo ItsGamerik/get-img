@@ -1,5 +1,4 @@
-use std::fs::{self, OpenOptions};
-use std::io::Write;
+use std::fs::{self};
 
 use crate::helper_functions::{edit_status_message, status_message, universal_parser};
 
@@ -144,26 +143,6 @@ pub async fn index_all_messages(messages: Vec<Message>, ctx: &Context) {
         }
         universal_parser(message).await;
     }
-}
-
-/// DO NOT USE
-#[deprecated(
-    since = "1.1.6",
-    note = "use the \"universal_parser()\" function instead"
-)]
-pub async fn parse(content: String) {
-    if let Err(why) = fs::create_dir_all("./download/") {
-        eprintln!("error creating file: {}", why);
-    }
-    let mut file = OpenOptions::new()
-        .write(true)
-        .create(true)
-        .append(true)
-        .open("./download/output.txt")
-        .unwrap();
-    if let Err(why) = writeln!(file, "{content}") {
-        eprintln!("error while writing to file: {}", why);
-    };
 }
 
 /// function that registers the command with the discord api

@@ -1,11 +1,17 @@
 mod commands;
 mod helper_functions;
 
-use std::{env, vec};
+use crate::commands::watch::WatcherEntry;
+
+use std::env;
+
+use tokio::fs::File;
+use tokio::io::AsyncBufReadExt;
 
 use helper_functions::universal_parser;
+
 // use serenity::model::prelude::GuildId;
-use serenity::model::prelude::{Activity, Ready, Message, ChannelId};
+use serenity::model::prelude::{Activity, Message, Ready};
 use serenity::prelude::*;
 use serenity::{async_trait, model};
 
@@ -39,17 +45,31 @@ impl EventHandler for Handler {
     async fn message(&self, _ctx: Context, msg: Message) {
         // this is probably inefficient, but it is better than what is used right now
         // every time the "message" event is fired, check if the message comes from a channel in the chanel_vec
-        let mut channel_vec: Vec<ChannelId> = vec!();
-        let example_channel = ChannelId(1012996311525625909);
-        channel_vec.push(example_channel);
+        // let example_channel = ChannelId(1012996311525625909);
+        // if msg.channel_id == example_channel {
+        //     println!("message found for watched channel!");
+        // }
+        let watcher_file = match File::create("./watchers").await {
+            Ok(file) => file,
+            Err(e) => {
+                eprintln!("an error occured: {e}");
+                return;
+            }
+        };
 
-        for channel in channel_vec {
-            if msg.channel_id == channel {
-                universal_parser(msg.clone()).await;
+        let mut lines = tokio::io::BufReader::new(watcher_file).lines();
+        while let Some(line) = lines.next_line().await.unwrap() {
+            let json: WatcherEntry = match serde_json::from_str(&line) {
+                Ok(entry) => entry,
+                Err(e) => {
+                    eprintln!("did u mess with the watchfile? {e}");
+                    return;
+                }
+            };
+            if msg.channel_id == json.id {
+                println!("it WORKED!")
             }
         }
-
-
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {

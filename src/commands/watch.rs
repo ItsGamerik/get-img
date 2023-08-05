@@ -1,19 +1,24 @@
-use std::collections::HashMap;
+use std::fs::OpenOptions;
+use std::io::Write;
 
+use tokio::fs::File;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+use serde::{Deserialize, Serialize};
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOptionValue;
-use serenity::model::prelude::ChannelId;
+use serenity::model::prelude::{ChannelId, PartialChannel, UserId};
 use serenity::prelude::Context;
 use serenity::{builder::CreateApplicationCommand, model::Permissions};
 
-// try and use the correct imports :)
-use crate::commands::{self};
-use tokio::task::{self};
-
 use crate::helper_functions::status_message;
 
-static mut BACKGROUND_TASK: Option<task::JoinHandle<()>> = None;
+#[derive(Debug, Serialize, Deserialize)]
+pub struct WatcherEntry {
+    pub id: ChannelId,
+    pub creator: UserId,
+}
 
 /// function that gets executed when the command is run
 pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
@@ -35,100 +40,125 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
         .as_ref()
         .expect("expected user object");
 
-    // toggle watch on and off
-
-    let mut channel_toggle_keys: HashMap<serenity::model::prelude::ChannelId, bool> =
-        HashMap::new();
-    let channel_id = interaction.channel_id;
-
-    if let (CommandDataOptionValue::Boolean(value), CommandDataOptionValue::Channel(_channel)) =
-        (option_bool, option_channel)
+    // create channel
+    let mut watch_track_file = match OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(true)
+        .open("./watchers")
     {
-        channel_toggle_keys.insert(channel_id, *value);
-    }
-    // thanks to the rust discord :D
+        Ok(file) => file,
+        Err(e) => {
+            eprintln!("could not open file \"watchers\": {}", e);
+            return;
+        }
+    };
 
-    // watch channel
-    // TODO: oh lawd this entire statement is a nightmare FIX IT
-    if let Some(toggle) = channel_toggle_keys.get(&channel_id) {
-        if *toggle {
-            let channel_id_format = format!("{}{}{}", "<", &channel_id, ">");
-            // toggle is "true"
-            unsafe {
-                if BACKGROUND_TASK.is_some() {
-                    status_message(
-                        ctx,
-                        "could not create watcher: stop watching other channel first.",
-                        interaction,
-                    )
-                    .await;
-                    return;
+    status_message(ctx, "creating channel watcher...", interaction).await;
+
+    let watch_channel_id = match option_channel {
+        CommandDataOptionValue::Channel(channel) => Some(channel),
+        _ => None,
+    };
+
+    if let CommandDataOptionValue::Boolean(true) = option_bool {
+        let watcher_entry = WatcherEntry {
+            id: watch_channel_id.unwrap().id,
+            creator: interaction.user.id,
+        };
+
+        let j = serde_json::to_string(&watcher_entry).unwrap();
+
+        if let Err(e) = writeln!(watch_track_file, "{j}") {
+            eprintln!("an error occured writing to file: {}", e);
+        }
+    } else {
+        let file = File::open("./watchers").await.unwrap();
+        let mut lines = tokio::io::BufReader::new(file).lines();
+        while let Some(line) = lines.next_line().await.unwrap() {
+            let json: WatcherEntry = serde_json::from_str(&line).unwrap();
+            if json.id == watch_channel_id.unwrap().id {
+                if let Err(e) = delete_line_from_file("./watchers", watch_channel_id).await {
+                    eprintln!("error {e}")
                 }
             }
-            let ctx = ctx.clone();
-            let response = format!("creating channel watcher for: {}", channel_id_format);
-            status_message(&ctx, &response, interaction).await;
-            let task = task::spawn(async move {
-                background_task(&ctx, &channel_id).await;
-            });
-            // wtf
-            unsafe {
-                BACKGROUND_TASK = Some(task);
-            }
-
-            println!("started watching: {}", &channel_id);
-        } else if !(*toggle) {
-            // toggle is "false"
-            unsafe {
-                if let Some(task) = &BACKGROUND_TASK {
-                    task.abort();
-                    BACKGROUND_TASK = None;
-                }
-            }
-            status_message(ctx, "stopped watching channel", interaction).await;
         }
     }
+}
+
+async fn delete_line_from_file(
+    file_path: &str,
+    watch_channel_id: Option<&PartialChannel>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Read the file
+    let file = File::open(file_path).await?;
+    let mut lines = BufReader::new(file).lines();
+
+    // Prepare a new buffer to store the updated content
+    let mut new_content = String::new();
+
+    // Process each line
+    while let Some(line) = lines.next_line().await? {
+        let json: WatcherEntry = serde_json::from_str(&line)?;
+
+        if watch_channel_id.is_some() && json.id == watch_channel_id.unwrap().id {
+            println!("Found channel watcher! (ID: {})", json.id);
+            // Skip the line by not adding it to the new_content
+        } else {
+            // Keep the line and add it to the new_content
+            new_content.push_str(&line);
+            new_content.push('\n'); // Add the newline character that was removed by `lines.next_line()`
+        }
+    }
+
+    // Reopen the file for writing
+    let mut file = File::create(file_path).await?;
+
+    // Write the new content back to the file
+    file.write_all(new_content.as_bytes()).await?;
+
+    Ok(())
 }
 
 /// background task for keeping track of selected channel.
 /// will run i a separate thread
-async fn background_task(ctx: &Context, channel_id: &ChannelId) {
-    let mut last_message_id: Option<u64> = None;
-    loop {
-        let messages = channel_id
-            .messages(&ctx.http, |retriever| retriever.limit(1))
-            .await
-            .expect("could not retrieve messages");
+// async fn background_task(ctx: &Context, channel_id: &ChannelId) {
+//     let mut last_message_id: Option<u64> = None;
+//     loop {
+//         let messages = channel_id
+//             .messages(&ctx.http, |retriever| retriever.limit(1))
+//             .await
+//             .expect("could not retrieve messages");
 
-        if let Some(latest_message) = messages.first() {
-            let latest_message_id = latest_message.id.0;
+//         if let Some(latest_message) = messages.first() {
+//             let latest_message_id = latest_message.id.0;
 
-            if let Some(last_id) = last_message_id {
-                if last_id != latest_message_id && !latest_message.author.bot {
-                    if latest_message.attachments.iter().any(|a| !a.url.is_empty()) {
-                        let mut attachment_vec = Vec::new();
-                        for attachment in &latest_message.attachments {
-                            attachment_vec.push(attachment);
-                        }
-                        for i in attachment_vec
-                            .iter()
-                            .map(|attachment| attachment.url.clone())
-                        {
-                            commands::index::parse(i).await;
-                        }
-                    } else {
-                        commands::index::parse(latest_message.content.to_string()).await;
-                    }
-                }
-            }
+//             if let Some(last_id) = last_message_id {
+//                 if last_id != latest_message_id && !latest_message.author.bot {
+//                     if latest_message.attachments.iter().any(|a| !a.url.is_empty()) {
+//                         let mut attachment_vec = Vec::new();
+//                         for attachment in &latest_message.attachments {
+//                             attachment_vec.push(attachment);
+//                         }
+//                         for i in attachment_vec
+//                             .iter()
+//                             .map(|attachment| attachment.url.clone())
+//                         {
+//                             commands::index::parse(i).await;
+//                         }
+//                     } else {
+//                         commands::index::parse(latest_message.content.to_string()).await;
+//                     }
+//                 }
+//             }
 
-            last_message_id = Some(latest_message_id);
-        }
+//             last_message_id = Some(latest_message_id);
+//         }
 
-        // TODO: execute every time a new message is sent
-        tokio::time::sleep(std::time::Duration::from_secs(3)).await;
-    }
-}
+//         // TODO: execute every time a new message is sent
+//         tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+//     }
+// }
 
 /// function that registers the command with the discord api
 /// minimum permission level: ADMINISTRATOR
