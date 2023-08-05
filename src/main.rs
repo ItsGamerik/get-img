@@ -45,17 +45,7 @@ impl EventHandler for Handler {
     async fn message(&self, _ctx: Context, msg: Message) {
         // this is probably inefficient, but it is better than what is used right now
         // every time the "message" event is fired, check if the message comes from a channel in the chanel_vec
-        // let example_channel = ChannelId(1012996311525625909);
-        // if msg.channel_id == example_channel {
-        //     println!("message found for watched channel!");
-        // }
-        let watcher_file = match File::create("./watchers").await {
-            Ok(file) => file,
-            Err(e) => {
-                eprintln!("an error occured: {e}");
-                return;
-            }
-        };
+        let watcher_file = File::open("./watchers").await.unwrap();
 
         let mut lines = tokio::io::BufReader::new(watcher_file).lines();
         while let Some(line) = lines.next_line().await.unwrap() {
@@ -67,7 +57,8 @@ impl EventHandler for Handler {
                 }
             };
             if msg.channel_id == json.id {
-                println!("it WORKED!")
+                println!("Channel watcher found a new message: {}", msg.id);
+                universal_parser(msg.clone()).await;
             }
         }
     }
