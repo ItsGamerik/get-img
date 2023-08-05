@@ -1,10 +1,17 @@
 mod commands;
 mod helper_functions;
 
+use crate::commands::watch::WatcherEntry;
+
 use std::env;
 
+use tokio::fs::File;
+use tokio::io::AsyncBufReadExt;
+
+use helper_functions::universal_parser;
+
 // use serenity::model::prelude::GuildId;
-use serenity::model::prelude::{Activity, Ready};
+use serenity::model::prelude::{Activity, Message, Ready};
 use serenity::prelude::*;
 use serenity::{async_trait, model};
 
@@ -34,6 +41,28 @@ impl EventHandler for Handler {
             };
         }
     }
+
+    async fn message(&self, _ctx: Context, msg: Message) {
+        // this is probably inefficient, but it is better than what is used right now
+        // every time the "message" event is fired, check if the message comes from a channel in the chanel_vec
+        let watcher_file = File::open("./watchers").await.unwrap();
+
+        let mut lines = tokio::io::BufReader::new(watcher_file).lines();
+        while let Some(line) = lines.next_line().await.unwrap() {
+            let json: WatcherEntry = match serde_json::from_str(&line) {
+                Ok(entry) => entry,
+                Err(e) => {
+                    eprintln!("did u mess with the watchfile? {e}");
+                    return;
+                }
+            };
+            if msg.channel_id == json.id {
+                println!("Channel watcher found a new message: {}", msg.id);
+                universal_parser(msg.clone()).await;
+            }
+        }
+    }
+
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
 
