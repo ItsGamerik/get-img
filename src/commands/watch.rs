@@ -119,47 +119,6 @@ async fn delete_line_from_file(
 
     Ok(())
 }
-
-/// background task for keeping track of selected channel.
-/// will run i a separate thread
-// async fn background_task(ctx: &Context, channel_id: &ChannelId) {
-//     let mut last_message_id: Option<u64> = None;
-//     loop {
-//         let messages = channel_id
-//             .messages(&ctx.http, |retriever| retriever.limit(1))
-//             .await
-//             .expect("could not retrieve messages");
-
-//         if let Some(latest_message) = messages.first() {
-//             let latest_message_id = latest_message.id.0;
-
-//             if let Some(last_id) = last_message_id {
-//                 if last_id != latest_message_id && !latest_message.author.bot {
-//                     if latest_message.attachments.iter().any(|a| !a.url.is_empty()) {
-//                         let mut attachment_vec = Vec::new();
-//                         for attachment in &latest_message.attachments {
-//                             attachment_vec.push(attachment);
-//                         }
-//                         for i in attachment_vec
-//                             .iter()
-//                             .map(|attachment| attachment.url.clone())
-//                         {
-//                             commands::index::parse(i).await;
-//                         }
-//                     } else {
-//                         commands::index::parse(latest_message.content.to_string()).await;
-//                     }
-//                 }
-//             }
-
-//             last_message_id = Some(latest_message_id);
-//         }
-
-//         // TODO: execute every time a new message is sent
-//         tokio::time::sleep(std::time::Duration::from_secs(3)).await;
-//     }
-// }
-
 /// function that registers the command with the discord api
 /// minimum permission level: ADMINISTRATOR
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
