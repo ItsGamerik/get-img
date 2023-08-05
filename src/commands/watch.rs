@@ -12,7 +12,7 @@ use serenity::model::prelude::{ChannelId, PartialChannel, UserId};
 use serenity::prelude::Context;
 use serenity::{builder::CreateApplicationCommand, model::Permissions};
 
-use crate::helper_functions::status_message;
+use crate::helper_functions::{status_message, edit_status_message};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WatcherEntry {
@@ -84,6 +84,10 @@ pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
             }
         }
     }
+
+    let success_string = format!("successfully created watcher for <#{}>", watch_channel_id.unwrap().id.0); 
+    edit_status_message(ctx, &success_string, interaction).await;
+    
 }
 
 async fn delete_line_from_file(
