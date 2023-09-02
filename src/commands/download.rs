@@ -151,3 +151,22 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         })
         .default_member_permissions(Permissions::ADMINISTRATOR)
 }
+
+#[cfg(test)]
+mod tests {
+
+    use crate::helper_functions::DiscordMessage;
+
+    #[test]
+    fn check_serializer() {
+        let new_discord_message = DiscordMessage {
+            timestamp: String::from("example"),
+            author: String::from("9304570871598356"),
+            content: String::from("this is a test"),
+            attachments: vec!["https://cdn.discordapp.com/attachments/1104408474248552448/1139239946738208828/Fu6SxumXoAAVveZ.jpg".to_owned()],
+        };
+        if let Err(e) = serde_json::to_string(&new_discord_message) {
+            panic!("error while serializing json: {}", e)
+        };
+    }
+}
