@@ -78,6 +78,7 @@ pub async fn index_all_messages(messages: Vec<Message>, ctx: &Context) {
     }
 
     // check if it is a thread
+    // TODO: for some reason this does not index attachments in threads?
     for message in messages {
         if let Some(thread) = &message.thread {
             let thread_last_message_id = match thread.last_message_id {
