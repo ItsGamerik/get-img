@@ -4,8 +4,8 @@
 
 ## Description
 
-Index attachments and messages (including threads!) in a discord channel or an entire server with a simple command and save the contient to a file.
-Once you have indexed messages, you can download the message list with a command and you can also automatically download all of the attachments that were uploaded to you computer!
+Index attachments and messages (including threads!) in a discord channel or an entire server with a simple command and save the content to a file.
+Once you have indexed messages, you can download the message list with a command and you can also automatically download all of the attachments that were uploaded to your computer!
 
 ## Usage
 
