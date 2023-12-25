@@ -1,5 +1,4 @@
-mod commands;
-mod helper_functions;
+use std::env;
 
 use log::{error, info, warn, LevelFilter};
 use serenity::all::{GuildId, Interaction};
@@ -8,13 +7,16 @@ use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 use simple_logger::SimpleLogger;
-use std::env;
+
+mod commands;
+mod helper_functions;
 
 struct Handler;
 #[async_trait]
 impl EventHandler for Handler {
     async fn message(&self, ctx: Context, msg: Message) {
-        todo!()
+        // TODO
+        panic!("message watcher placeholder")
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
@@ -23,7 +25,10 @@ impl EventHandler for Handler {
         let guild_id = GuildId::new(env::var("GUILD_ID").unwrap().parse().unwrap());
 
         if let Err(e) = guild_id
-            .set_commands(&ctx.http, vec![commands::help::register()])
+            .set_commands(
+                &ctx.http,
+                vec![commands::help::register(), commands::index::register()],
+            )
             .await
         {
             error!("error creating one or more commands: {e}")
@@ -36,6 +41,10 @@ impl EventHandler for Handler {
             let _ = match command.data.name.as_str() {
                 "help" => {
                     commands::help::run(ctx, &command).await;
+                    Some(())
+                }
+                "index" => {
+                    commands::index::run(ctx, &command, &command.data.options()).await;
                     Some(())
                 }
                 _ => Some(warn!(
