@@ -1,4 +1,5 @@
 mod commands;
+mod helper_functions;
 
 use log::{error, info, warn, LevelFilter};
 use serenity::all::{GuildId, Interaction};
