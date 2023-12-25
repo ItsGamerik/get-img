@@ -51,6 +51,7 @@ impl EventHandler for Handler {
                     commands::index::register(),
                     commands::indexall::register(),
                     commands::watch::register(),
+                    commands::download::register(),
                 ],
             )
             .await
@@ -77,6 +78,10 @@ impl EventHandler for Handler {
                 }
                 "indexall" => {
                     commands::indexall::run(ctx, command).await;
+                    Some(())
+                }
+                "download" => {
+                    commands::download::run(ctx, &command, &command.data.options()).await;
                     Some(())
                 }
                 _ => Some(warn!(
