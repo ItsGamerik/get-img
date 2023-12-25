@@ -1,5 +1,7 @@
-use log::warn;
-use serenity::all::{Colour, CommandInteraction, CreateEmbed, CreateInteractionResponse, CreateInteractionResponseMessage, ResolvedOption};
+use serenity::all::{
+    Colour, CommandInteraction, CreateEmbed, CreateInteractionResponse,
+    CreateInteractionResponseMessage,
+};
 use serenity::builder::CreateCommand;
 use serenity::prelude::Context;
 
@@ -12,9 +14,14 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction) {
         .field("`/indexall`", "index all messages of the server where the interaction was sent. Due to API limitations, this can take quite a long time, especially for larger servers. Progress is indicated by the bot's status.", false)
         .url("https://github.com/ItsGamerik/get-img#commands").color(Colour::DARK_GREEN);
 
-    let builder = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().add_embed(embed));
+    let builder = CreateInteractionResponse::Message(
+        CreateInteractionResponseMessage::new().add_embed(embed),
+    );
 
-    interaction.create_response(ctx.http, builder).await.unwrap();
+    interaction
+        .create_response(ctx.http, builder)
+        .await
+        .unwrap();
 }
 pub fn register() -> CreateCommand {
     CreateCommand::new("help").description("help command for get-img bot")
