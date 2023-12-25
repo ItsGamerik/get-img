@@ -27,7 +27,11 @@ impl EventHandler for Handler {
         if let Err(e) = guild_id
             .set_commands(
                 &ctx.http,
-                vec![commands::help::register(), commands::index::register()],
+                vec![
+                    commands::help::register(),
+                    commands::index::register(),
+                    commands::indexall::register(),
+                ],
             )
             .await
         {
@@ -45,6 +49,10 @@ impl EventHandler for Handler {
                 }
                 "index" => {
                     commands::index::run(ctx, &command, &command.data.options()).await;
+                    Some(())
+                }
+                "indexall" => {
+                    commands::indexall::run(ctx, command).await;
                     Some(())
                 }
                 _ => Some(warn!(
