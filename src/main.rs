@@ -7,6 +7,11 @@ use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 use simple_logger::SimpleLogger;
+use tokio::fs::File;
+use tokio::io::AsyncBufReadExt;
+
+use crate::commands::watch::WatcherEntry;
+use crate::helper_functions::universal_message_writer;
 
 mod commands;
 mod helper_functions;
@@ -14,9 +19,23 @@ mod helper_functions;
 struct Handler;
 #[async_trait]
 impl EventHandler for Handler {
-    async fn message(&self, ctx: Context, msg: Message) {
-        // TODO
-        panic!("message watcher placeholder")
+    async fn message(&self, _ctx: Context, msg: Message) {
+        let watcher_file = File::open("./.watchers").await.unwrap();
+
+        let mut lines = tokio::io::BufReader::new(watcher_file).lines();
+        while let Some(line) = lines.next_line().await.unwrap() {
+            let json: WatcherEntry = match serde_json::from_str(&line) {
+                Ok(entry) => entry,
+                Err(e) => {
+                    error!("did u mess with the watchfile >:( ({e})");
+                    return;
+                }
+            };
+            if msg.channel_id == json.id {
+                info!("Channel watcher found a new message: {}", msg.id);
+                universal_message_writer(msg.clone()).await;
+            }
+        }
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
@@ -31,6 +50,7 @@ impl EventHandler for Handler {
                     commands::help::register(),
                     commands::index::register(),
                     commands::indexall::register(),
+                    commands::watch::register(),
                 ],
             )
             .await
@@ -40,9 +60,13 @@ impl EventHandler for Handler {
     }
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::Command(command) = interaction {
-            info!("recieved commands interaction");
+            info!("recieved command interaction");
 
-            let _ = match command.data.name.as_str() {
+            match command.data.name.as_str() {
+                "watch" => {
+                    commands::watch::run(ctx, &command, &command.data.options()).await;
+                    Some(())
+                }
                 "help" => {
                     commands::help::run(ctx, &command).await;
                     Some(())
@@ -60,14 +84,6 @@ impl EventHandler for Handler {
                     format!("{}", command.data.name)
                 )),
             };
-
-            // if let Some(content) = content {
-            //     let data = CreateInteractionResponseMessage::new().content(content);
-            //     let builder = CreateInteractionResponse::Message(data);
-            //     if let Err(why) = command.create_response(&ctx.http, builder).await {
-            //         println!("Cannot respond to slash command: {why}");
-            //     }
-            // }
         }
     }
 }
