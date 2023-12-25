@@ -68,7 +68,6 @@ async fn index(ctx: &Context, channel: &&PartialChannel) {
                 return;
             }
         };
-
         if messages.is_empty() {
             break;
         }
@@ -157,6 +156,7 @@ pub async fn index_all_messages(messages: Vec<Message>, ctx: &Context) {
                 }
             }
         }
+        universal_message_writer(message).await;
     }
 }
 
