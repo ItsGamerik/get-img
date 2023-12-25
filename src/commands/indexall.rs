@@ -1,70 +1,79 @@
-use serenity::{
-    builder::CreateApplicationCommand,
-    model::{
-        prelude::{interaction::application_command::ApplicationCommandInteraction, ChannelId},
-        Permissions,
-    },
-    prelude::Context,
+use log::{error, info, warn};
+use serenity::all::{
+    ChannelId, CommandInteraction, Context, CreateCommand, GetMessages, Permissions,
 };
 
 use crate::commands::index::index_all_messages;
-use crate::helper_functions::{edit_status_message, status_message};
+use crate::helper_functions::*;
 
-/// function that gets executed when the command is run
-pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
-    status_message(ctx, "starting to index server...", interaction).await;
+pub async fn run(ctx: Context, interaction: CommandInteraction) {
+    info!(
+        "starting to index server {}, this may take a long time.",
+        interaction.guild_id.unwrap()
+    );
+    status_message(
+        &ctx,
+        "starting to index entire server, this might take a long time",
+        &interaction,
+    )
+    .await;
 
-    index_server(ctx, interaction).await;
+    index_server(&ctx, &interaction).await;
 
-    println!("done indexing server.");
-    edit_status_message(ctx, "done indexing server.", interaction).await;
+    info!("done indexing server.");
+    edit_status_message(&ctx, "done indexing server.", &interaction).await;
 }
 
-async fn index_server(ctx: &Context, interaction: &ApplicationCommandInteraction) {
+async fn index_server(ctx: &Context, interaction: &CommandInteraction) {
     let guild_channels = match interaction.guild_id.unwrap().channels(&ctx.http).await {
         Ok(channels) => channels,
         Err(e) => {
-            eprintln!("could not find any channels to index: {}", e);
+            error!("could not find any channels to index: {e}");
             return;
         }
     };
 
-    for i in guild_channels.values() {
-        println!("found channel: {}", i);
-        let channel_id: ChannelId = i.into();
-        get_messages(ctx, channel_id).await;
+    for gchannel in guild_channels.values() {
+        if gchannel.is_text_based() {
+            info!("found channel: {}", gchannel.name);
+            let channel_id: ChannelId = gchannel.into();
+            get_messages(ctx, channel_id).await;
+        } else {
+            info!(
+                "skipping  \"{}\" because it is not a text channel",
+                gchannel.name
+            )
+        }
     }
 }
 
 async fn get_messages(ctx: &Context, channel_id: ChannelId) {
-    let one_message = match channel_id
-        .messages(&ctx.http, |retriever| retriever.limit(1))
-        .await
-    {
+    let one_message = match channel_id.messages(&ctx, GetMessages::new().limit(1)).await {
         Ok(message) => message,
         Err(e) => {
-            eprintln!("could not get messaage: {}", e);
+            error!("could not get messages: {e}");
             return;
         }
     };
+
     let last_message = match one_message.last() {
         Some(message_id) => message_id,
         None => {
-            eprintln!("no message id could be found");
+            warn!("no message id could be found!");
             return;
         }
     };
+
     let mut one_message_id = last_message.id;
+
     loop {
         let messages = match channel_id
-            .messages(&ctx.http, |retriever| {
-                retriever.before(one_message_id).limit(100)
-            })
+            .messages(&ctx, GetMessages::new().limit(100).before(one_message_id))
             .await
         {
             Ok(messages) => messages,
             Err(e) => {
-                eprintln!("could not retrieve messages: {}", e);
+                error!("could not retrieve messages: {e}");
                 return;
             }
         };
@@ -79,11 +88,9 @@ async fn get_messages(ctx: &Context, channel_id: ChannelId) {
     }
 }
 
-/// function that registers the command with the discord api
-/// minimum permission level: ADMINISTRATOR
-pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
-    command
+pub fn register() -> CreateCommand {
+    CreateCommand::new("indexall")
         .name("indexall")
-        .description("index messages from the entire server")
+        .description("index messages from the ENTIRE server")
         .default_member_permissions(Permissions::ADMINISTRATOR)
 }

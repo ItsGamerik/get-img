@@ -1,127 +1,142 @@
-use std::fs::{self};
+use std::fs;
 
-use crate::helper_functions::{edit_status_message, status_message, universal_parser};
-
-use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
-use serenity::model::prelude::Message;
-use serenity::model::Permissions;
-use serenity::{
-    builder::CreateApplicationCommand,
-    model::prelude::{interaction::application_command::CommandDataOptionValue, PartialChannel},
-    prelude::Context,
+use log::{error, info, warn};
+use serenity::all::{
+    CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption,
+    GetMessages, Message, PartialChannel, Permissions, ResolvedOption, ResolvedValue,
 };
 
-/// function that gets executed when the command is run
-pub async fn run(ctx: &Context, interaction: &ApplicationCommandInteraction) {
-    let option = interaction
-        .data
-        .options
-        .get(0)
-        .expect("expected user option")
-        .resolved
-        .as_ref()
-        .expect("expected user objexct");
+use crate::helper_functions::*;
 
-    if let CommandDataOptionValue::Channel(channel) = option {
-        let response_string = format!(
-            "added messages from channel **{}** to index",
+pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[ResolvedOption<'_>]) {
+    // this part already does parsing & evaluation of args, no need for CommandDataOptionValue
+    // but this does feel wierd
+    let target_confirmed_message: String;
+    let target_channel: &&PartialChannel;
+
+    if let Some(ResolvedOption {
+        value: ResolvedValue::Channel(channel),
+        ..
+    }) = options.first()
+    {
+        info!(
+            "trying to parse channel: {}",
             channel.name.as_ref().unwrap()
         );
-        status_message(ctx, "indexing channel...", interaction).await;
-
-        index(ctx, channel).await;
-
-        edit_status_message(ctx, &response_string, interaction).await;
+        target_channel = channel;
+        target_confirmed_message = format!(
+            "added messages from channel **{}** to index",
+            target_channel.name.as_ref().unwrap()
+        );
     } else {
-        status_message(ctx, "an error occured, check logs", interaction).await;
+        error!("non-channel recieved!");
+        return;
     }
+
+    status_message(&ctx, "indexing channel...", interaction).await;
+
+    index(&ctx, target_channel).await;
+
+    edit_status_message(&ctx, &target_confirmed_message, interaction).await;
 }
 
-/// used to index the selected channel
-async fn index(ctx: &Context, channel: &PartialChannel) {
-    let message_vector = channel
-        .id
-        .messages(&ctx, |retriever| retriever.limit(1))
-        .await
-        .expect("could not retrieve message");
-    let single_message: &Message = message_vector.last().unwrap();
+async fn index(ctx: &Context, channel: &&PartialChannel) {
+    // TODO: add check to see if there is a thread that is NOT a message
+    let message_vector = match channel.id.messages(&ctx, GetMessages::new().limit(1)).await {
+        Ok(m) => m,
+        Err(e) => {
+            error!("an error occurred retrieving messages: {e}");
+            return;
+        }
+    };
+    let single_message = message_vector.last().unwrap();
+
     let mut single_message_id = single_message.id;
+
     loop {
         let messages = match channel
             .id
-            .messages(&ctx, |retriever| {
-                retriever.before(single_message_id).limit(100)
-            })
+            .messages(
+                &ctx,
+                GetMessages::new().limit(100).before(single_message_id),
+            )
             .await
         {
             Ok(messages) => messages,
             Err(e) => {
-                eprintln!("an error occured while retrieving messages: {}", e);
+                error!("an error occurred while retrieving messages: {e}");
                 return;
             }
         };
-
         if messages.is_empty() {
             break;
         }
 
-        // try to iterate "upwards" in the channel
+        // iterate "upwards"
         single_message_id = messages.last().unwrap().id;
         index_all_messages(messages, ctx).await;
     }
 }
 
-/// index all messages and parse them
 pub async fn index_all_messages(messages: Vec<Message>, ctx: &Context) {
-    if let Err(why) = fs::create_dir_all("./download/") {
-        eprintln!("error creating file: {}", why);
+    if let Err(e) = fs::create_dir_all("./download/") {
+        error!("error creating directory: {e}")
     }
 
-    // check if it is a thread
     for message in messages {
         if let Some(thread) = &message.thread {
-            let thread_last_message_id = match thread.last_message_id {
-                Some(messageid) => {
-                    println!("found message ({}) in thread: {}", messageid, thread.id);
-                    messageid
+            let last_thread_message_id = match thread.last_message_id {
+                Some(message_id) => {
+                    info!(
+                        "found message ({}) in thread \"{}\" ({})",
+                        message.id, thread.name, thread.id
+                    );
+                    message_id
                 }
                 None => {
-                    eprintln!("no message could be found for thread {}", thread.id);
+                    warn!(
+                        "thread {} ({}) seems to be empty. skipping.",
+                        thread.name, thread.id
+                    );
                     return;
                 }
             };
 
-            let thread_to_message = match thread.message(&ctx.http, thread_last_message_id).await {
-                Ok(message) => message,
+            // i cba typing "message" anymore
+            let thread_to_message = match thread.message(&ctx, last_thread_message_id).await {
+                Ok(msg) => msg,
                 Err(e) => {
-                    eprintln!("an error occured trying to get message: {}", e);
+                    error!("an error occurred getting message: {e}");
                     return;
                 }
             };
 
-            // you can treat threads kinda like channels
-            let messages_in_thread = thread_to_message
+            let msgs_in_thread = thread_to_message
                 .channel(&ctx.http)
                 .await
                 .unwrap()
                 .id()
-                .messages(&ctx.http, |builder| {
-                    builder.limit(1).before(thread_to_message.id)
-                })
+                .messages(
+                    &ctx.http,
+                    GetMessages::new().limit(1).before(thread_to_message.id),
+                )
                 .await
                 .unwrap();
 
-            let single_message: &Message = messages_in_thread.last().unwrap();
+            let single_message: &Message = msgs_in_thread.last().unwrap();
+
             let mut single_message_id = single_message.id;
+
             loop {
                 let messages = match thread_to_message
                     .channel(&ctx.http)
                     .await
                     .unwrap()
                     .id()
-                    .messages(&ctx, |retriever| {
-                        retriever.before(single_message_id).limit(100)
-                    })
+                    .messages(
+                        &ctx,
+                        GetMessages::new().before(single_message_id).limit(100),
+                    )
                     .await
                 {
                     Ok(messages) => messages,
@@ -137,26 +152,25 @@ pub async fn index_all_messages(messages: Vec<Message>, ctx: &Context) {
 
                 single_message_id = messages.last().unwrap().id;
                 for message in messages {
-                    universal_parser(message).await;
+                    universal_message_writer(message).await;
                 }
             }
         }
-        universal_parser(message).await;
+        universal_message_writer(message).await;
     }
 }
 
-/// function that registers the command with the discord api
-/// minimum permission level: ADMINISTRATOR
-pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
-    command
+pub fn register() -> CreateCommand {
+    CreateCommand::new("index")
         .name("index")
         .description("index images or messages in channel")
-        .create_option(|option| {
-            option
-                .name("id") // MAN KANN NICHT EIN LEERZEICHEN BENUTZEN
-                .description("channel id of target channel")
-                .kind(serenity::model::prelude::command::CommandOptionType::Channel)
-                .required(true)
-        })
+        .add_option(
+            CreateCommandOption::new(
+                CommandOptionType::Channel,
+                "id",
+                "channel id of target channel",
+            )
+            .required(true),
+        )
         .default_member_permissions(Permissions::ADMINISTRATOR)
 }

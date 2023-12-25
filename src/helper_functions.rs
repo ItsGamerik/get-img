@@ -1,90 +1,86 @@
-// this file contains some helper functions
-
-use std::fs::{self, OpenOptions};
-use std::io::Write;
-
+use log::error;
 use serde::{Deserialize, Serialize};
-use serenity::{
-    model::{
-        prelude::{
-            application_command::ApplicationCommandInteraction, Activity, Attachment,
-            InteractionResponseType, Message,
-        },
-        user::OnlineStatus,
-    },
-    prelude::Context,
+use serenity::all::{
+    ActivityData, Attachment, CommandInteraction, Context, CreateInteractionResponse,
+    CreateInteractionResponseFollowup, CreateInteractionResponseMessage, EditInteractionResponse,
+    Message, OnlineStatus,
 };
+use std::fs;
+use std::fs::OpenOptions;
+use std::io::Write;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DiscordMessage {
     pub timestamp: String,
     pub author: String,
     pub content: String,
-    // GOOD THAT THIS WORKS
     pub attachments: Vec<String>,
 }
 
-/// used to create interaction responses.
-pub async fn status_message(ctx: &Context, msg: &str, interaction: &ApplicationCommandInteraction) {
+pub async fn status_message(ctx: &Context, msg: &str, interaction: &CommandInteraction) {
     start_action(ctx).await;
-    interaction
-        .create_interaction_response(&ctx.http, |response| {
-            response
-                .kind(InteractionResponseType::ChannelMessageWithSource)
-                .interaction_response_data(|data| data.content(msg.to_string()))
-        })
-        .await
-        .unwrap();
+
+    let builder =
+        CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().content(msg));
+
+    if let Err(e) = interaction.create_response(ctx.http.clone(), builder).await {
+        error!("could not send interaction response: {e}")
+    };
 }
 
-/// used to edit an already existing status message
-pub async fn edit_status_message(
-    ctx: &Context,
-    response_string: &str,
-    interaction: &ApplicationCommandInteraction,
-) {
-    stop_action(ctx).await;
-    interaction
-        .edit_original_interaction_response(&ctx.http, |response| response.content(response_string))
-        .await
-        .unwrap();
+pub async fn edit_status_message(ctx: &Context, msg: &str, interaction: &CommandInteraction) {
+    end_action(ctx).await;
+
+    let builder = EditInteractionResponse::new().content(msg);
+
+    if let Err(e) = interaction.edit_response(&ctx.http.clone(), builder).await {
+        error!("could not update interaction: {e}")
+    }
 }
 
-/// create followup message
-pub async fn followup_status_message(
-    ctx: &Context,
-    response_string: &str,
-    interaction: &ApplicationCommandInteraction,
-) {
-    stop_action(ctx).await;
-    interaction
-        .create_followup_message(&ctx.http, |response| response.content(response_string))
-        .await
-        .unwrap();
+pub async fn followup_status_message(ctx: &Context, msg: &str, interaction: &CommandInteraction) {
+    end_action(ctx).await;
+
+    let builder = CreateInteractionResponseFollowup::new().content(msg);
+
+    if let Err(e) = interaction.create_followup(ctx.http.clone(), builder).await {
+        error!("could not followup interaction: {e}")
+    }
 }
 
 async fn start_action(ctx: &Context) {
-    // the status update seems to be very slow, so it probably wont actually show unless a task is started that takes a long time
-    let status = OnlineStatus::DoNotDisturb;
-    ctx.set_presence(Some(Activity::watching("currently working...")), status)
-        .await;
+    ctx.set_presence(
+        Some(ActivityData::watching("working...")),
+        OnlineStatus::DoNotDisturb,
+    );
 }
 
-async fn stop_action(ctx: &Context) {
-    let status = OnlineStatus::Online;
-    ctx.set_presence(Some(Activity::watching("v1.3 - ready for work")), status)
-        .await;
+async fn end_action(ctx: &Context) {
+    ctx.set_presence(
+        Some(ActivityData::watching("ready to go :D")),
+        OnlineStatus::Online,
+    );
+
+    // // wtf is this shit
+    // if let Err(e) = interaction
+    //     .create_followup(
+    //         ctx.http.clone(),
+    //         CreateInteractionResponseFollowup::content(
+    //             CreateInteractionResponseFollowup::new(),
+    //             "test",
+    //         ),
+    //     )
+    //     .await
+    // {
+    //     error!("could not ... interaction: {e}");
+    // }
 }
-/// used to parse messages into the output.
-/// does this one message at a time.
-pub async fn universal_parser(message: Message) {
-    let message_author: serenity::model::user::User = message.author;
-    let message_timestamp: serenity::model::Timestamp = message.timestamp;
-    let message_content: String = message.content;
+
+pub async fn universal_message_writer(message: Message) {
     let message_attachments: Vec<Attachment> = message.attachments;
 
     if let Err(e) = fs::create_dir_all("./download/") {
-        eprintln!("error creating download file: {}", e);
+        error!("error creating download file: {e}")
     }
 
     let mut file = match OpenOptions::new()
@@ -95,7 +91,7 @@ pub async fn universal_parser(message: Message) {
     {
         Ok(file) => file,
         Err(e) => {
-            eprintln!("could not open file \"output.txt\": {}", e);
+            error!("could not open file: {e}");
             return;
         }
     };
@@ -103,22 +99,19 @@ pub async fn universal_parser(message: Message) {
     let mut attachment_link_vec = Vec::new();
 
     for attachment in message_attachments {
-        attachment_link_vec.push(attachment.url);
+        attachment_link_vec.push(attachment.url)
     }
 
     let json_object = DiscordMessage {
-        author: format!("{}", message_author),
-        content: message_content,
+        author: format!("{}", message.author),
+        content: message.content,
         attachments: attachment_link_vec,
-        timestamp: format!("{}", message_timestamp),
+        timestamp: format!("{}", message.timestamp),
     };
 
-    let j = serde_json::to_string(&json_object).unwrap();
+    let serialized = serde_json::to_string(&json_object).unwrap();
 
-    // this only create a raw list of json objects containing the messages, for the user download i will have to
-    // combine the raw objects into a json array by adding "," to the end of each line
-    // and adding [] around the objects
-    if let Err(e) = writeln!(file, "{j}") {
-        eprintln!("error writing to file output.txt: {}", e);
+    if let Err(e) = writeln!(file, "{serialized}") {
+        error!("error writing to file: {e}")
     }
 }
