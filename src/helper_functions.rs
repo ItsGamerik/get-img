@@ -1,9 +1,13 @@
+use log::error;
+use serde::{Deserialize, Serialize};
+use serenity::all::{
+    ActivityData, Attachment, CommandInteraction, Context, CreateInteractionResponse,
+    CreateInteractionResponseFollowup, CreateInteractionResponseMessage, EditInteractionResponse,
+    Message, OnlineStatus,
+};
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
-use log::error;
-use serde::{Deserialize, Serialize};
-use serenity::all::{ActivityData, Attachment, CommandInteraction, Context, CreateInteractionResponseFollowup, Message, OnlineStatus};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DiscordMessage {
@@ -13,33 +17,78 @@ pub struct DiscordMessage {
     pub attachments: Vec<String>,
 }
 
-pub async fn start_action(ctx: &Context, interaction: &CommandInteraction) {
+pub async fn status_message(ctx: &Context, msg: &str, interaction: &CommandInteraction) {
+    start_action(ctx).await;
 
-    ctx.set_presence(Some(ActivityData::watching("working...")), OnlineStatus::DoNotDisturb);
+    let builder =
+        CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().content(msg));
 
-    if let Err(e) = interaction.defer(ctx.http.clone()).await {
-        error!("could not defer interaction: {e}");
+    if let Err(e) = interaction.create_response(ctx.http.clone(), builder).await {
+        error!("could not send interaction response: {e}")
     };
 }
 
-pub async fn end_action(ctx: &Context, interaction: &CommandInteraction) {
-    ctx.set_presence(Some(ActivityData::watching("TODO")), OnlineStatus::Online);
+pub async fn edit_status_message(ctx: &Context, msg: &str, interaction: &CommandInteraction) {
+    end_action(ctx).await;
 
-    // wtf is this shit
-    if let Err(e) = interaction.create_followup(ctx.http.clone(), CreateInteractionResponseFollowup::content(CreateInteractionResponseFollowup::new(), "test")).await {
-        error!("could not ... interaction: {e}");
+    let builder = EditInteractionResponse::new().content(msg);
+
+    if let Err(e) = interaction.edit_response(&ctx.http.clone(), builder).await {
+        error!("could not update interaction: {e}")
     }
 }
 
-pub async fn universal_message_writer(message: Message) {
+pub async fn followup_status_message(ctx: &Context, msg: &str, interaction: &CommandInteraction) {
+    end_action(ctx).await;
 
+    let builder = CreateInteractionResponseFollowup::new().content(msg);
+
+    if let Err(e) = interaction.create_followup(ctx.http.clone(), builder).await {
+        error!("could not followup interaction: {e}")
+    }
+}
+
+async fn start_action(ctx: &Context) {
+    ctx.set_presence(
+        Some(ActivityData::watching("working...")),
+        OnlineStatus::DoNotDisturb,
+    );
+}
+
+async fn end_action(ctx: &Context) {
+    ctx.set_presence(
+        Some(ActivityData::watching("ready to go :D")),
+        OnlineStatus::Online,
+    );
+
+    // // wtf is this shit
+    // if let Err(e) = interaction
+    //     .create_followup(
+    //         ctx.http.clone(),
+    //         CreateInteractionResponseFollowup::content(
+    //             CreateInteractionResponseFollowup::new(),
+    //             "test",
+    //         ),
+    //     )
+    //     .await
+    // {
+    //     error!("could not ... interaction: {e}");
+    // }
+}
+
+pub async fn universal_message_writer(message: Message) {
     let message_attachments: Vec<Attachment> = message.attachments;
 
     if let Err(e) = fs::create_dir_all("./download/") {
         error!("error creating download file: {e}")
     }
 
-    let mut file = match OpenOptions::new().write(true).create(true).append(true).open("./download/output.txt") {
+    let mut file = match OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(true)
+        .open("./download/output.txt")
+    {
         Ok(file) => file,
         Err(e) => {
             error!("could not open file: {e}");
@@ -57,7 +106,7 @@ pub async fn universal_message_writer(message: Message) {
         author: format!("{}", message.author),
         content: message.content,
         attachments: attachment_link_vec,
-        timestamp: format!("{}", message.timestamp)
+        timestamp: format!("{}", message.timestamp),
     };
 
     let serialized = serde_json::to_string(&json_object).unwrap();
