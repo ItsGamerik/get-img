@@ -33,8 +33,6 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
         return;
     }
 
-    dbg!(target_channel);
-
     status_message(&ctx, "indexing channel...", interaction).await;
 
     index(&ctx, target_channel).await;
