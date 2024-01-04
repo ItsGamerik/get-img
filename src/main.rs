@@ -20,7 +20,13 @@ struct Handler;
 #[async_trait]
 impl EventHandler for Handler {
     async fn message(&self, _ctx: Context, msg: Message) {
-        let watcher_file = File::open("./.watchers").await.unwrap();
+        let watcher_file = match File::open("./.watchers").await {
+            Ok(f) => f,
+            Err(e) => {
+                warn!("watcher file not found, not indexing message ({e})");
+                return;
+            },
+        };
 
         let mut lines = tokio::io::BufReader::new(watcher_file).lines();
         while let Some(line) = lines.next_line().await.unwrap() {
