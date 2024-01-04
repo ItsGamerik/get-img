@@ -1,11 +1,9 @@
 use std::path::{Path, PathBuf};
 
 use log::{error, info};
+use regex::Regex;
 use serenity::all::CommandOptionType::Boolean;
-use serenity::all::{
-    CommandInteraction, Context, CreateAttachment, CreateCommand, CreateCommandOption,
-    CreateInteractionResponseFollowup, Permissions, ResolvedOption, ResolvedValue,
-};
+use serenity::all::{ActivityData, CommandInteraction, Context, CreateAttachment, CreateCommand, CreateCommandOption, CreateInteractionResponseFollowup, OnlineStatus, Permissions, ResolvedOption, ResolvedValue};
 use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 use tokio::{fs, io};
@@ -43,24 +41,26 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
                 info!("started to download attachments");
                 interaction
                     .create_followup(
-                        ctx.http,
+                        &ctx.http,
                         CreateInteractionResponseFollowup::new()
-                            .content("downloading to disk!")
+                            .content("downloaded to disk!")
                             .add_file(attachment),
                     )
                     .await
                     .unwrap();
+                ctx.set_presence(Some(ActivityData::watching("Ready to go :D")), OnlineStatus::Online);
             } else {
                 // if it is false
                 interaction
                     .create_followup(
-                        ctx.http,
+                        &ctx.http,
                         CreateInteractionResponseFollowup::new()
                             .content("here is the list of messages!")
                             .add_file(attachment),
                     )
                     .await
                     .unwrap();
+                ctx.set_presence(Some(ActivityData::watching("Ready to go :D")), OnlineStatus::Online);
             }
         } else {
             followup_status_message(
@@ -106,7 +106,11 @@ async fn download_file(url: String) {
         .to_str()
         .unwrap()
         .to_owned();
-    // TODO: fix file names with regex ^(.*?)(\?ex=) here
+
+    let re = Regex::new(r"(\?ex=).*?$").unwrap();
+
+    let cleansed_file_name = re.replace(&file_name, "").to_string();
+
     let root_path = "./download/attachments/";
     if fs::metadata(&root_path).await.is_err() {
         match fs::create_dir_all(&root_path).await {
@@ -118,12 +122,12 @@ async fn download_file(url: String) {
         }
     }
 
-    let mut file_path = PathBuf::from(&root_path).join(&file_name);
+    let mut file_path = PathBuf::from(&root_path).join(&cleansed_file_name);
 
     let mut index = 0;
     while file_path.exists() {
         index += 1;
-        let new_file_name = format!("{}.{}", index, file_name);
+        let new_file_name = format!("{}.{}", index, cleansed_file_name);
         file_path.set_file_name(new_file_name);
     }
 
