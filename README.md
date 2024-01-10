@@ -57,7 +57,9 @@ you have to be an administrator of the discord server you are using the bot in t
 
 ### Docker
 
+(this still requires some editing)
 
+Docker images are available [here](https://hub.docker.com/r/gamerik/get-img)
 
 ## Setting up a bot through Discord
 
