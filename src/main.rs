@@ -10,6 +10,7 @@ use simple_logger::SimpleLogger;
 use tokio::fs::File;
 use tokio::io::AsyncBufReadExt;
 
+use crate::commands::download::download_file;
 use crate::commands::watch::WatcherEntry;
 use crate::helper_functions::universal_message_writer;
 
@@ -25,7 +26,7 @@ impl EventHandler for Handler {
             Err(e) => {
                 warn!("watcher file not found, not indexing message ({e})");
                 return;
-            },
+            }
         };
 
         let mut lines = tokio::io::BufReader::new(watcher_file).lines();
@@ -40,6 +41,13 @@ impl EventHandler for Handler {
             if msg.channel_id == json.id {
                 info!("Channel watcher found a new message: {}", msg.id);
                 universal_message_writer(msg.clone()).await;
+                if json.autodl {
+                    for attachment in msg.attachments.clone() {
+                        download_file(attachment.url).await;
+                    }
+                } else {
+                    continue;
+                }
             }
         }
     }

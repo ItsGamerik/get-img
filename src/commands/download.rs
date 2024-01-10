@@ -3,7 +3,11 @@ use std::path::{Path, PathBuf};
 use log::{error, info};
 use regex::Regex;
 use serenity::all::CommandOptionType::Boolean;
-use serenity::all::{ActivityData, CommandInteraction, Context, CreateAttachment, CreateCommand, CreateCommandOption, CreateInteractionResponseFollowup, OnlineStatus, Permissions, ResolvedOption, ResolvedValue};
+use serenity::all::{
+    ActivityData, CommandInteraction, Context, CreateAttachment, CreateCommand,
+    CreateCommandOption, CreateInteractionResponseFollowup, OnlineStatus, Permissions,
+    ResolvedOption, ResolvedValue,
+};
 use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 use tokio::{fs, io};
@@ -48,7 +52,10 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
                     )
                     .await
                     .unwrap();
-                ctx.set_presence(Some(ActivityData::watching("Ready to go :D")), OnlineStatus::Online);
+                ctx.set_presence(
+                    Some(ActivityData::watching("Ready to go :D")),
+                    OnlineStatus::Online,
+                );
             } else {
                 // if it is false
                 interaction
@@ -60,7 +67,10 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
                     )
                     .await
                     .unwrap();
-                ctx.set_presence(Some(ActivityData::watching("Ready to go :D")), OnlineStatus::Online);
+                ctx.set_presence(
+                    Some(ActivityData::watching("Ready to go :D")),
+                    OnlineStatus::Online,
+                );
             }
         } else {
             followup_status_message(
@@ -91,7 +101,7 @@ async fn read_file() {
     }
 }
 
-async fn download_file(url: String) {
+pub async fn download_file(url: String) {
     let client = reqwest::Client::new();
     let response = match client.get(&url).send().await {
         Ok(r) => r,
