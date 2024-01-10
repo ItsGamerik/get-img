@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fs::OpenOptions;
 use std::io::Write;
 
-use log::{error, info};
+use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use serenity::all::{
     ChannelId, CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption,
@@ -17,11 +17,13 @@ use crate::helper_functions::{edit_status_message, status_message};
 pub struct WatcherEntry {
     pub id: ChannelId,
     pub creator: UserId,
+    pub autodl: bool,
 }
 
 pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[ResolvedOption<'_>]) {
     let option_channel: &&PartialChannel;
-    let option_bool: &bool;
+    let option_toggle: &bool;
+    let option_dl: &bool;
 
     if let Some(ResolvedOption {
         value: ResolvedValue::Channel(channel),
@@ -39,10 +41,21 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
         ..
     }) = options.get(1)
     {
-        option_bool = bool
+        option_toggle = bool
     } else {
         error!("could not parse watcher command options");
         return;
+    }
+
+    if let Some(ResolvedOption {
+        value: ResolvedValue::Boolean(bool),
+        ..
+    }) = options.get(2)
+    {
+        option_dl = bool
+    } else {
+        option_dl = &false;
+        info!("defaulting to false for watcher")
     }
 
     let mut watch_track_file = match OpenOptions::new()
@@ -60,25 +73,67 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
 
     status_message(&ctx, "creating/updating channel watcher...", interaction).await;
 
-    if let &true = option_bool {
-        let watcher_entry = WatcherEntry {
-            id: option_channel.id,
-            creator: interaction.user.id,
-        };
-
-        let json = serde_json::to_string(&watcher_entry).unwrap();
-
-        if let Err(e) = writeln!(watch_track_file, "{json}") {
-            error!("an error occurred writing to file: {e}");
+    let file2 = match File::open("./.watchers").await {
+        Ok(f) => f,
+        Err(e) => {
+            warn!("watcher file not found, not indexing message ({e})");
+            return;
         }
-    } else {
-        let file = File::open("./.watchers").await.unwrap();
-        let mut lines = BufReader::new(file).lines();
-        while let Some(line) = lines.next_line().await.unwrap() {
-            let json: WatcherEntry = serde_json::from_str(&line).unwrap();
-            if json.id == option_channel.id {
-                if let Err(e) = delete_line_from_file("./.watchers", option_channel.id).await {
-                    error!("an error occurred writing to file: {e}")
+    };
+
+    let mut lines = tokio::io::BufReader::new(file2).lines();
+    while let Some(line) = lines.next_line().await.unwrap() {
+        let json: WatcherEntry = match serde_json::from_str(&line) {
+            Ok(entry) => entry,
+            Err(_) => {
+                info!("watch file does not exist yet");
+                return;
+            }
+        };
+        if json.id == option_channel.id {
+            delete_line_from_file("./.watchers", option_channel.id).await.unwrap();
+        }
+    }
+
+    let file = match File::open("./.watchers").await {
+        Ok(f) => f,
+        Err(e) => {
+            warn!("watcher file not found, not indexing message ({e})");
+            return;
+        }
+    };
+
+    match (option_toggle, option_dl) {
+        (true, true) => {
+            let watcher_entry = WatcherEntry {
+                id: option_channel.id,
+                creator: interaction.user.id,
+                autodl: true,
+            };
+            let json = serde_json::to_string(&watcher_entry).unwrap();
+            if let Err(e) = writeln!(watch_track_file, "{json}") {
+                error!("an error occurred writing to file: {e}");
+            }
+        }
+        (true, false) => {
+            let watcher_entry = WatcherEntry {
+                id: option_channel.id,
+                creator: interaction.user.id,
+                autodl: false,
+            };
+            let json = serde_json::to_string(&watcher_entry).unwrap();
+            if let Err(e) = writeln!(watch_track_file, "{json}") {
+                error!("an error occurred writing to file: {e}");
+            }
+        }
+        _ => {
+            let mut lines = BufReader::new(file).lines();
+            while let Some(line) = lines.next_line().await.unwrap() {
+                let json: WatcherEntry = serde_json::from_str(&line).unwrap();
+                if json.id == option_channel.id {
+                    if let Err(e) = delete_line_from_file("./.watchers", option_channel.id).await {
+                        error!("an error occurred writing to file: {e}")
+                    }
                 }
             }
         }
@@ -131,6 +186,12 @@ pub fn register() -> CreateCommand {
                 "toggle watcher on and off",
             )
             .required(true),
+            CreateCommandOption::new(
+                CommandOptionType::Boolean,
+                "autodownload",
+                "automatically download attachments",
+            )
+            .required(false),
         ])
         .default_member_permissions(Permissions::ADMINISTRATOR)
 }
