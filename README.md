@@ -5,13 +5,13 @@
 ## Description
 
 Index attachments and messages (including threads!) in a discord channel or an entire server with a simple command and save the content to a file.
-Once you have indexed messages, you can download the message list with a command and you can also automatically download all of the attachments that were uploaded to your computer!
+Once you have indexed messages, you can download the message list with a command, and you can also automatically download all the attachments that were uploaded to your computer!
 
 ## Usage
 
 ### Building
 
-just use [cargo](https://www.rust-lang.org/tools/install) for building:
+just use [cargo](https://www.rust-lang.org/tools/install) (the rust building utility) for building:
 
 ```shell
 cargo build --release && cargo run --release
@@ -22,28 +22,28 @@ cargo build --release && cargo run --release
 First, set your Discord bot token as an environment variable:
 
 ```shell
-export DISCORD_TOKEN=""
+export DISCORD_TOKEN="<your_token_here>"
 ```
 
-pro tip: make sure to put a space before the "export" to hide the command from your history.
+pro-tip: make sure to put a space before the "export" to hide the command from your history.
 
-on windows you can use the
+on windows, you can use the
 
 ```powershell
-$ENV:DISCORD_TOKEN=""
+$ENV:DISCORD_TOKEN="<your_token_here>"
 ```
 
 command to set your environment variable.
 
 ### Commands
 
-```text
-/help                       displays the help message
-/index [channel]            index every message with an attachment in a channel.
-/download [bool]            sends the index file into the discord channel, and will download attachments if specified.
-/watch [channel] [bool]     toggles the automatic indexing for the specified channel on and off.
-/indexall                   index all messages of the server where the interaction was sent. Due to API limitations, this can take quite a long time, especially for larger servers. Progress is indicated by the bot's status.
-```
+| Command                        | Usage                                                                                                                                                                                               |
+|--------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| /help                          | displays the help message.                                                                                                                                                                          |
+| /index [channel]               | index every message with an attachment in a channel.                                                                                                                                                |
+| /watch [channel] [bool] [bool] | toggles the automatic indexing for the specified channel on and off. Can also automatically download the attachments to disk if toggled on (optional).                                              |
+| /download [bool]               | sends the index file into the discord channel, and will download attachments if specified.                                                                                                          |
+| /indexall                      | index all messages of the server where the interaction was sent. Due to API limitations, this can take quite a long time, especially for larger servers. Progress is indicated by the bot's status. |
 
 you have to be an administrator of the discord server you are using the bot in to be able to use the commands:  
 
@@ -54,6 +54,10 @@ you have to be an administrator of the discord server you are using the bot in t
 - /watch
 
 - /indexall
+
+### Docker
+
+
 
 ## Setting up a bot through Discord
 
