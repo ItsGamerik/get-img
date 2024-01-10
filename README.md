@@ -35,6 +35,8 @@ $ENV:DISCORD_TOKEN="<your_token_here>"
 
 command to set your environment variable.
 
+**You will have to do the same for the `GUILD_ID` environment variable so the bot can register all the commands to your Discord server.**
+
 ### Commands
 
 | Command                        | Usage                                                                                                                                                                                               |
