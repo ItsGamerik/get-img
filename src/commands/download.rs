@@ -96,7 +96,7 @@ async fn read_file() {
     while let Some(line) = lines.next_line().await.unwrap() {
         let json: DiscordMessage = serde_json::from_str(&line).unwrap();
         for link in json.attachments {
-            download_file(link).await;
+            tokio::spawn(download_file(link));
         }
     }
 }
