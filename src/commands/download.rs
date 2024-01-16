@@ -1,4 +1,5 @@
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use log::{error, info};
 use regex::Regex;
@@ -11,6 +12,7 @@ use serenity::all::{
 use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 use tokio::{fs, io};
+use tokio::sync::Semaphore;
 
 use crate::helper_functions::{followup_status_message, status_message, DiscordMessage};
 
@@ -92,11 +94,19 @@ async fn read_file() {
         }
     };
 
+    let sems = Arc::new(Semaphore::new(1000));
+    let mut handles = Vec::new();
+
     let mut lines = io::BufReader::new(file).lines();
     while let Some(line) = lines.next_line().await.unwrap() {
         let json: DiscordMessage = serde_json::from_str(&line).unwrap();
         for link in json.attachments {
-            tokio::spawn(download_file(link));
+            let sem_clone = Arc::clone(&sems);
+            let handle = tokio::spawn(async move {
+                let _ = sem_clone.acquire().await.unwrap();
+                download_file(link).await;
+            });
+            handles.push(handle);
         }
     }
 }
@@ -141,7 +151,7 @@ pub async fn download_file(url: String) {
         file_path.set_file_name(new_file_name);
     }
 
-    let mut file: File = fs::File::create(&file_path).await.unwrap();
+    let mut file: File = File::create(&file_path).await.unwrap();
     let response_file = response.bytes().await.unwrap().to_vec();
     match file.write_all(&response_file).await {
         Ok(_) => info!("successfully downloaded \"{}\"", file_name),
