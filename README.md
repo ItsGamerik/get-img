@@ -4,50 +4,64 @@
 
 ## Description
 
-Index attachments and messages (including threads!) in a discord channel or an entire server with a simple command and save the content to a file.
-Once you have indexed messages, you can download the message list with a command, and you can also automatically download all the attachments that were uploaded to your computer!
+This tool helps you preserve your Discord conversations and message attachments.
+Capture and maintain the contents of your Discord server or specific channels using simple commands.
+Index and download messages, attachments, and threads to save the entire contents to a file for easy backups or archiving.
 
 ## Usage
-
+  
 ### Building
 
 just use [cargo](https://www.rust-lang.org/tools/install) (the rust building utility) for building:
 
 ```shell
-cargo build --release && cargo run --release
+$ cargo build --release
 ```
+
+the executable can then be found in the folder `target/release`.
 
 ### Running
 
-First, set your Discord bot token as an environment variable:
+First, set your Discord bot token and guild ID as an environment variable:
 
 ```shell
-export DISCORD_TOKEN="<your_token_here>"
+$  export DISCORD_TOKEN="<your_token_here>"
+$ export GUILD_ID="<your_gid_here>"
 ```
 
-pro-tip: make sure to put a space before the "export" to hide the command from your history.
+> pro-tip: make sure to put a space before the "export" command to hide your bot token from the shell history.
 
-on windows, you can use the
+on **windows**, you can use the
 
 ```powershell
 $ENV:DISCORD_TOKEN="<your_token_here>"
+$ENV:GUILD_ID="<your_gid_here>"
 ```
 
 command to set your environment variable.
 
-**You will have to do the same for the `GUILD_ID` environment variable so the bot can register all the commands to your Discord server.**
+
+then, run the bot:
+
+```shell
+cargo run --release
+```
+
+(or just run the executable)
 
 ### Commands
 
-| Command                        | Usage                                                                                                                                                                                               |
-|--------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| /help                          | displays the help message.                                                                                                                                                                          |
-| /index [channel]               | index every message with an attachment in a channel.                                                                                                                                                |
-| /watch [channel] [bool] [bool] | toggles the automatic indexing for the specified channel on and off. Can also automatically download the attachments to disk if toggled on (optional).                                              |
-| /download [bool]               | sends the index file into the discord channel, and will download attachments if specified.                                                                                                          |
-| /indexall                      | index all messages of the server where the interaction was sent. Due to API limitations, this can take quite a long time, especially for larger servers. Progress is indicated by the bot's status. |
+(these commands have to be run on the discord server where the bot is running)
 
-you have to be an administrator of the discord server you are using the bot in to be able to use the commands:  
+| Command                        | Usage                                                                                                                                                                                                        |
+|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| /help                          | displays the help message.                                                                                                                                                                                   |
+| /index [channel]               | index every message with an attachment in a channel.                                                                                                                                                         |
+| /watch [channel] [bool] [bool] | toggles the automatic indexing for the specified channel on and off. Can also automatically download the attachments to disk if toggled on (optional).                                                       |
+| /download [bool]               | sends the index file into the discord channel, and will download attachments if specified.                                                                                                                   |
+| /indexall                      | index all messages of the server where the interaction was sent. Due to API limitations, this can take quite a long time, especially for larger servers. Progress is indicated by the the status of the bot. |
+
+you have to be an administrator of the discord server you are using the bot in to be able to use these commands:  
 
 - /index
 
@@ -59,9 +73,13 @@ you have to be an administrator of the discord server you are using the bot in t
 
 ### Docker
 
-(this still requires some editing)
+**Docker images are available [here](https://hub.docker.com/r/gamerik/get-img)**
 
-Docker images are available [here](https://hub.docker.com/r/gamerik/get-img)
+You can also use docker to run the bot. Make sure to set the environment variables as described above.
+
+```shell
+docker run -it -e "DISCORD_TOKEN=<your_token_here>" -e "GUILD_ID=<your_gid_here>" get-img:<version>
+```
 
 ## Setting up a bot through Discord
 
