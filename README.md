@@ -12,6 +12,15 @@ Index and download messages, attachments, and threads to save the entire content
   
 ### Building
 
+for compiling you will need the OpenSSL development package:
+```shell
+# for deb-based distros
+$ sudo apt install libssl-dev
+
+# for rpm-based distros
+$ sudo dnf install openssl-devel 
+```
+
 just use [cargo](https://www.rust-lang.org/tools/install) (the rust building utility) for building:
 
 ```shell
@@ -44,7 +53,7 @@ command to set your environment variable.
 then, run the bot:
 
 ```shell
-cargo run --release
+$ cargo run --release
 ```
 
 (or just run the executable)
@@ -78,7 +87,7 @@ you have to be an administrator of the discord server you are using the bot in t
 You can also use docker to run the bot. Make sure to set the environment variables as described above.
 
 ```shell
-docker run -it -e "DISCORD_TOKEN=<your_token_here>" -e "GUILD_ID=<your_gid_here>" get-img:<version>
+$ docker run -it -e "DISCORD_TOKEN=<your_token_here>" -e "GUILD_ID=<your_gid_here>" get-img:<version>
 ```
 
 ## Setting up a bot through Discord
