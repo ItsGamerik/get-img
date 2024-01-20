@@ -90,7 +90,7 @@ You can also use docker to run the bot. Make sure to set the environment variabl
 $ docker run -it -e "DISCORD_TOKEN=<your_token_here>" -e "GUILD_ID=<your_gid_here>" get-img:<version>
 ```
 
-## Setting up a bot through Discord
+## Setting up a bot through the Discord Developer Portal
 
 1. Go to the [Discord Developer page](https://discord.com/developers/applications).
 
@@ -100,15 +100,18 @@ $ docker run -it -e "DISCORD_TOKEN=<your_token_here>" -e "GUILD_ID=<your_gid_her
 
 4. Select your new App and open the `OAuth2` Section. Reset your `Client Secret` and make sure to write it down in a safe place.
 
-5. Now head to the OAuth2 section `URL Generator`. Select `bot` as the scope and add the necessary permissions.
+5. Now head to the OAuth2 section `URL Generator`. Select `bot` as the scope and add the necessary bot permissions*
 
 6. Copy the link to your clipboard but don't open it yet.
 
 7. Click on the section `Bot` and uncheck the switch called `Public Bot`
 
-8. Scroll down to the switch called `Message Content Intent`. Check the switch. This will be necessary to read the message history in channels.
+8. Scroll down to the switch called `Message Content Intent`. Check the switch. This will be necessary to read the messages in channels.
 
-9. Now paste the link into your browser and add the bot to your discord server. If everything worked, you should now be able to use the bot!
+9. Now paste the link into your browser and add the bot to your discord server. If everything worked, the bot should now be on your discord server!
+
+
+*required permissions are: `Send Messages, Send Messages in Threads, Embed Links, Attach Files, Read Message History, Use Slash Commands`
 
 ## Additional useful links
 
