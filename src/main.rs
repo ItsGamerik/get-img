@@ -127,6 +127,8 @@ async fn main() {
     if let Err(e) = config::config_functions::read_config().await {
         error!("error reading config file: {e}");
         return;
+    } else {
+        info!("successfully read config file!")
     };
     let token: String = match env::var("DISCORD_TOKEN") {
         Ok(token) => {
