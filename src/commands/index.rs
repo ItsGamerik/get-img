@@ -1,11 +1,11 @@
 use std::fs;
 
+use crate::config::config_functions::CONFIG;
 use log::{error, info, warn};
 use serenity::all::{
     CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption,
     GetMessages, Message, PartialChannel, Permissions, ResolvedOption, ResolvedValue,
 };
-use crate::config::config_functions::CONFIG;
 
 use crate::helper_functions::*;
 

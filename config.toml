@@ -2,7 +2,7 @@
 # directory of the watchfile
 watchfile = "."
 
-# download dir, no trailing slashes
+# download directory
 downloads = "./downloads"
 
 [downloading]

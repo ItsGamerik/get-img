@@ -1,3 +1,4 @@
+use crate::config::config_functions::CONFIG;
 use log::error;
 use serde::{Deserialize, Serialize};
 use serenity::all::{
@@ -8,7 +9,6 @@ use serenity::all::{
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
-use crate::config::config_functions::CONFIG;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DiscordMessage {
@@ -74,7 +74,6 @@ pub async fn universal_message_writer(message: Message) {
     if let Err(e) = fs::create_dir_all(path) {
         error!("error creating download file: {e}")
     }
-
 
     let mut file = match OpenOptions::new()
         .write(true)

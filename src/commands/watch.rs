@@ -2,6 +2,7 @@ use std::error::Error;
 use std::fs::OpenOptions;
 use std::io::Write;
 
+use crate::config::config_functions::CONFIG;
 use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use serenity::all::{
@@ -10,7 +11,6 @@ use serenity::all::{
 };
 use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
-use crate::config::config_functions::CONFIG;
 
 use crate::helper_functions::{edit_status_message, status_message};
 
@@ -95,8 +95,11 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
                 return;
             }
         };
+        // note: using format! is apparently slower than using .as_str etc.
         if json.id == option_channel.id {
-            delete_line_from_file(&format!("{path}/.watchers"), option_channel.id).await.unwrap();
+            delete_line_from_file(&format!("{path}/.watchers"), option_channel.id)
+                .await
+                .unwrap();
         }
     }
 

@@ -1,6 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use crate::config::config_functions::CONFIG;
 use log::{error, info};
 use regex::Regex;
 use serenity::all::CommandOptionType::Boolean;
@@ -11,9 +12,8 @@ use serenity::all::{
 };
 use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
-use tokio::{fs, io};
 use tokio::sync::Semaphore;
-use crate::config::config_functions::CONFIG;
+use tokio::{fs, io};
 
 use crate::helper_functions::{followup_status_message, status_message, DiscordMessage};
 

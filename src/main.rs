@@ -16,8 +16,8 @@ use crate::config::config_functions::CONFIG;
 use crate::helper_functions::universal_message_writer;
 
 mod commands;
-mod helper_functions;
 mod config;
+mod helper_functions;
 
 struct Handler;
 #[async_trait]
