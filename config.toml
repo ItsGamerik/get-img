@@ -1,13 +1,10 @@
-[Directories]
+[directories]
 # directory of the watchfile
 watchfile = "."
 
-# download dir
-downloadds = "./downloads/attachments"
+# download dir, no trailing slashes
+downloads = "./downloads"
 
-# index dir
-index = "./downloads"
-
-[Downloading]
+[downloading]
 # number of concurrent downloads
 parallel_downloads = 1000

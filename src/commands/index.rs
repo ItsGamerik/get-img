@@ -5,6 +5,7 @@ use serenity::all::{
     CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption,
     GetMessages, Message, PartialChannel, Permissions, ResolvedOption, ResolvedValue,
 };
+use crate::config::config_functions::CONFIG;
 
 use crate::helper_functions::*;
 
@@ -79,7 +80,10 @@ async fn index(ctx: &Context, channel: &&PartialChannel) {
 }
 
 pub async fn index_all_messages(messages: Vec<Message>, ctx: &Context) {
-    if let Err(e) = fs::create_dir_all("./download/") {
+    let lock = CONFIG.lock().await;
+    let cfg = lock.get().unwrap();
+    let path = &cfg.directories.downloads;
+    if let Err(e) = fs::create_dir_all(path) {
         error!("error creating directory: {e}")
     }
 

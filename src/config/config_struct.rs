@@ -2,18 +2,17 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
-    dirs: Directories,
-    dl: Downloading,
+    pub directories: Directories,
+    pub downloading: Downloading,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Directories {
-    watchfile: String,
-    downloads: String,
-    index: String,
+    pub watchfile: String,
+    pub downloads: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Downloading {
-    parallel_downloads: i32,
+    pub parallel_downloads: usize,
 }

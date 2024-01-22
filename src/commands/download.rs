@@ -13,6 +13,7 @@ use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 use tokio::{fs, io};
 use tokio::sync::Semaphore;
+use crate::config::config_functions::CONFIG;
 
 use crate::helper_functions::{followup_status_message, status_message, DiscordMessage};
 
@@ -86,7 +87,10 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
 }
 
 async fn read_file() {
-    let file = match File::open("./download/output.txt").await {
+    let lock = CONFIG.lock().await;
+    let cfg = lock.get().unwrap();
+    let path = &cfg.directories.downloads;
+    let file = match File::open(path.to_string() + "/output.txt").await {
         Ok(f) => f,
         Err(e) => {
             error!("error reading output.txt: {e}");
@@ -94,7 +98,8 @@ async fn read_file() {
         }
     };
 
-    let sems = Arc::new(Semaphore::new(1000));
+    let dl_count = &cfg.downloading.parallel_downloads;
+    let sems = Arc::new(Semaphore::new(*dl_count));
     let mut handles = Vec::new();
 
     let mut lines = io::BufReader::new(file).lines();
@@ -112,6 +117,9 @@ async fn read_file() {
 }
 
 pub async fn download_file(url: String) {
+    let lock = CONFIG.lock().await;
+    let cfg = lock.get().unwrap();
+    let path = &cfg.directories.downloads;
     let client = reqwest::Client::new();
     let response = match client.get(&url).send().await {
         Ok(r) => r,
@@ -131,7 +139,7 @@ pub async fn download_file(url: String) {
 
     let cleansed_file_name = re.replace(&file_name, "").to_string();
 
-    let root_path = "./download/attachments/";
+    let root_path = path.to_string() + "/attachments/";
     if fs::metadata(&root_path).await.is_err() {
         match fs::create_dir_all(&root_path).await {
             Ok(_) => info!("created attachment download dir, as it did not exist"),

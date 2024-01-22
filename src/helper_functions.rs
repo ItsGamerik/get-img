@@ -8,6 +8,7 @@ use serenity::all::{
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
+use crate::config::config_functions::CONFIG;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DiscordMessage {
@@ -60,34 +61,26 @@ async fn end_action(ctx: &Context) {
         Some(ActivityData::watching("ready to go :D")),
         OnlineStatus::Online,
     );
-
-    // // wtf is this shit
-    // if let Err(e) = interaction
-    //     .create_followup(
-    //         ctx.http.clone(),
-    //         CreateInteractionResponseFollowup::content(
-    //             CreateInteractionResponseFollowup::new(),
-    //             "test",
-    //         ),
-    //     )
-    //     .await
-    // {
-    //     error!("could not ... interaction: {e}");
-    // }
 }
 
 pub async fn universal_message_writer(message: Message) {
     let message_attachments: Vec<Attachment> = message.attachments;
 
-    if let Err(e) = fs::create_dir_all("./download/") {
+    let lock = CONFIG.lock().await;
+    let cfg = lock.get().unwrap();
+
+    let path = &cfg.directories.downloads;
+
+    if let Err(e) = fs::create_dir_all(path) {
         error!("error creating download file: {e}")
     }
+
 
     let mut file = match OpenOptions::new()
         .write(true)
         .create(true)
         .append(true)
-        .open("./download/output.txt")
+        .open(path.to_string() + "/output.txt")
     {
         Ok(file) => file,
         Err(e) => {
