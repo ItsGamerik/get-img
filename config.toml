@@ -1,0 +1,13 @@
+[Directories]
+# directory of the watchfile
+watchfile = "."
+
+# download dir
+downloadds = "./downloads/attachments"
+
+# index dir
+index = "./downloads"
+
+[Downloading]
+# number of concurrent downloads
+parallel_downloads = 1000

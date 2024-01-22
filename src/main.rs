@@ -16,6 +16,7 @@ use crate::helper_functions::universal_message_writer;
 
 mod commands;
 mod helper_functions;
+mod config;
 
 struct Handler;
 #[async_trait]
@@ -116,6 +117,10 @@ async fn main() {
         .with_module_level("get_img", LevelFilter::Info)
         .init()
         .unwrap();
+    if let Err(e) = config::config_functions::read_config() {
+        error!("error reading config file: {e}");
+        return;
+    };
     let token: String = match env::var("DISCORD_TOKEN") {
         Ok(token) => {
             info!("token found in env!");
