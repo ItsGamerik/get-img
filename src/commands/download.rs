@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use crate::config::config_functions::CONFIG;
@@ -30,20 +30,24 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
         return;
     }
 
-    let path = Path::new("./download/output.txt");
+    let lock = CONFIG.lock().await;
+    let cfg = lock.get().unwrap();
+    let path = &cfg.directories.downloads;
+    let path2 = path.clone();
+    drop(lock);
 
     status_message(&ctx, "downloading attachments...", interaction).await;
 
-    let output_file = File::open(&path).await.unwrap();
-    let attachment = CreateAttachment::file(&output_file, "output.txt")
-        .await
-        .unwrap();
-
-    if let Ok(meta) = fs::metadata(&path).await {
+    if let Ok(meta) = fs::metadata(path2.to_string() + "/output.txt").await {
         if meta.is_file() {
             if *option_bool {
                 // case if dltodisk is true
+                let output_file = File::open(path2.to_string() + "/output.txt").await.unwrap();
+                let attachment = CreateAttachment::file(&output_file, "output.txt")
+                    .await
+                    .unwrap();
                 read_file().await;
+
                 // TODO: remove some of the unwraps
                 info!("started to download attachments");
                 interaction
@@ -61,6 +65,11 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
                 );
             } else {
                 // if it is false
+                let output_file = File::open(path2.to_string() + "/output.txt").await.unwrap();
+                let attachment = CreateAttachment::file(&output_file, "output.txt")
+                    .await
+                    .unwrap();
+                read_file().await;
                 interaction
                     .create_followup(
                         &ctx.http,
@@ -75,14 +84,14 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
                     OnlineStatus::Online,
                 );
             }
-        } else {
-            followup_status_message(
-                &ctx,
-                "not indexed yet. Try using `/index` to index first.",
-                interaction,
-            )
-            .await;
         }
+    } else {
+        followup_status_message(
+            &ctx,
+            "not indexed yet. Try using `/index` to index first.",
+            interaction,
+        )
+        .await;
     }
 }
 
