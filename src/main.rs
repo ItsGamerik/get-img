@@ -31,8 +31,7 @@ impl EventHandler for Handler {
 
         let watcher_file = match File::open(path.to_string() + "/.watchers").await {
             Ok(f) => f,
-            Err(e) => {
-                warn!("watcher file not found, not indexing message ({e})");
+            Err(_) => {
                 return;
             }
         };
