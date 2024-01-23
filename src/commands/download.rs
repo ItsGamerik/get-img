@@ -1,6 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 
+use crate::config::config_functions::CONFIG;
 use log::{error, info};
 use regex::Regex;
 use serenity::all::CommandOptionType::Boolean;
@@ -11,8 +12,8 @@ use serenity::all::{
 };
 use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
-use tokio::{fs, io};
 use tokio::sync::Semaphore;
+use tokio::{fs, io};
 
 use crate::helper_functions::{followup_status_message, status_message, DiscordMessage};
 
@@ -29,21 +30,26 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
         return;
     }
 
-    let path = Path::new("./download/output.txt");
+    let lock = CONFIG.lock().await;
+    let cfg = lock.get().unwrap();
+    let path = &cfg.directories.downloads;
+    let path2 = path.clone();
+    drop(lock);
 
     status_message(&ctx, "downloading attachments...", interaction).await;
 
-    let output_file = File::open(&path).await.unwrap();
-    let attachment = CreateAttachment::file(&output_file, "output.txt")
-        .await
-        .unwrap();
+    // this is still way too convoluted
 
-    if let Ok(meta) = fs::metadata(&path).await {
+    if let Ok(meta) = fs::metadata(path2.to_string() + "/output.txt").await {
         if meta.is_file() {
             if *option_bool {
                 // case if dltodisk is true
+                let output_file = File::open(path2.to_string() + "/output.txt").await.unwrap();
+                let attachment = CreateAttachment::file(&output_file, "output.txt")
+                    .await
+                    .unwrap();
                 read_file().await;
-                // TODO: remove some of the unwraps
+
                 info!("started to download attachments");
                 interaction
                     .create_followup(
@@ -60,6 +66,11 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
                 );
             } else {
                 // if it is false
+                let output_file = File::open(path2.to_string() + "/output.txt").await.unwrap();
+                let attachment = CreateAttachment::file(&output_file, "output.txt")
+                    .await
+                    .unwrap();
+                read_file().await;
                 interaction
                     .create_followup(
                         &ctx.http,
@@ -74,19 +85,22 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
                     OnlineStatus::Online,
                 );
             }
-        } else {
-            followup_status_message(
-                &ctx,
-                "not indexed yet. Try using `/index` to index first.",
-                interaction,
-            )
-            .await;
         }
+    } else {
+        followup_status_message(
+            &ctx,
+            "not indexed yet. Try using `/index` to index first.",
+            interaction,
+        )
+        .await;
     }
 }
 
 async fn read_file() {
-    let file = match File::open("./download/output.txt").await {
+    let lock = CONFIG.lock().await;
+    let cfg = lock.get().unwrap();
+    let path = &cfg.directories.downloads;
+    let file = match File::open(path.to_string() + "/output.txt").await {
         Ok(f) => f,
         Err(e) => {
             error!("error reading output.txt: {e}");
@@ -94,7 +108,8 @@ async fn read_file() {
         }
     };
 
-    let sems = Arc::new(Semaphore::new(1000));
+    let dl_count = &cfg.downloading.parallel_downloads;
+    let sems = Arc::new(Semaphore::new(*dl_count));
     let mut handles = Vec::new();
 
     let mut lines = io::BufReader::new(file).lines();
@@ -112,6 +127,9 @@ async fn read_file() {
 }
 
 pub async fn download_file(url: String) {
+    let lock = CONFIG.lock().await;
+    let cfg = lock.get().unwrap();
+    let path = &cfg.directories.downloads;
     let client = reqwest::Client::new();
     let response = match client.get(&url).send().await {
         Ok(r) => r,
@@ -131,7 +149,7 @@ pub async fn download_file(url: String) {
 
     let cleansed_file_name = re.replace(&file_name, "").to_string();
 
-    let root_path = "./download/attachments/";
+    let root_path = path.to_string() + "/attachments/";
     if fs::metadata(&root_path).await.is_err() {
         match fs::create_dir_all(&root_path).await {
             Ok(_) => info!("created attachment download dir, as it did not exist"),

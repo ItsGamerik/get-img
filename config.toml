@@ -1,0 +1,10 @@
+[directories]
+# directory of the watchfile
+watchfile = "."
+
+# download directory
+downloads = "./download"
+
+[downloading]
+# number of concurrent downloads
+parallel_downloads = 1000

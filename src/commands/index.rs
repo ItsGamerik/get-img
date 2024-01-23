@@ -1,5 +1,6 @@
 use std::fs;
 
+use crate::config::config_functions::CONFIG;
 use log::{error, info, warn};
 use serenity::all::{
     CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption,
@@ -79,9 +80,16 @@ async fn index(ctx: &Context, channel: &&PartialChannel) {
 }
 
 pub async fn index_all_messages(messages: Vec<Message>, ctx: &Context) {
-    if let Err(e) = fs::create_dir_all("./download/") {
+    let lock = CONFIG.lock().await;
+    let cfg = lock.get().unwrap();
+    let path = &cfg.directories.downloads;
+    if let Err(e) = fs::create_dir_all(path) {
         error!("error creating directory: {e}")
     }
+
+    // make sure to not create a random deadlock!
+
+    drop(lock);
 
     for message in messages {
         if let Some(thread) = &message.thread {

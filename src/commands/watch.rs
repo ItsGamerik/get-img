@@ -2,6 +2,7 @@ use std::error::Error;
 use std::fs::OpenOptions;
 use std::io::Write;
 
+use crate::config::config_functions::CONFIG;
 use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use serenity::all::{
@@ -28,7 +29,7 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
     if let Some(ResolvedOption {
         value: ResolvedValue::Channel(channel),
         ..
-    }) = options.get(0)
+    }) = options.first()
     {
         option_channel = channel
     } else {
@@ -58,11 +59,15 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
         info!("defaulting to false for watcher")
     }
 
+    let lock = CONFIG.lock().await;
+    let cfg = lock.get().unwrap();
+    let path = &cfg.directories.watchfile;
+
     let mut watch_track_file = match OpenOptions::new()
         .write(true)
         .create(true)
         .append(true)
-        .open("./.watchers")
+        .open(path.to_string() + ".watchers")
     {
         Ok(file) => file,
         Err(e) => {
@@ -73,7 +78,7 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
 
     status_message(&ctx, "creating/updating channel watcher...", interaction).await;
 
-    let file2 = match File::open("./.watchers").await {
+    let mut file2 = match File::open(path.to_string() + ".watchers").await {
         Ok(f) => f,
         Err(e) => {
             warn!("watcher file not found, not indexing message ({e})");
@@ -81,7 +86,7 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
         }
     };
 
-    let mut lines = tokio::io::BufReader::new(file2).lines();
+    let mut lines = BufReader::new(&mut file2).lines();
     while let Some(line) = lines.next_line().await.unwrap() {
         let json: WatcherEntry = match serde_json::from_str(&line) {
             Ok(entry) => entry,
@@ -90,18 +95,13 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
                 return;
             }
         };
+        // note: using format! is apparently slower than using .as_str etc.
         if json.id == option_channel.id {
-            delete_line_from_file("./.watchers", option_channel.id).await.unwrap();
+            delete_line_from_file(&format!("{path}/.watchers"), option_channel.id)
+                .await
+                .unwrap();
         }
     }
-
-    let file = match File::open("./.watchers").await {
-        Ok(f) => f,
-        Err(e) => {
-            warn!("watcher file not found, not indexing message ({e})");
-            return;
-        }
-    };
 
     match (option_toggle, option_dl) {
         (true, true) => {
@@ -127,7 +127,7 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
             }
         }
         _ => {
-            let mut lines = BufReader::new(file).lines();
+            let mut lines = BufReader::new(file2).lines();
             while let Some(line) = lines.next_line().await.unwrap() {
                 let json: WatcherEntry = serde_json::from_str(&line).unwrap();
                 if json.id == option_channel.id {

@@ -12,19 +12,26 @@ use tokio::io::AsyncBufReadExt;
 
 use crate::commands::download::download_file;
 use crate::commands::watch::WatcherEntry;
+use crate::config::config_functions::CONFIG;
 use crate::helper_functions::universal_message_writer;
 
 mod commands;
+mod config;
 mod helper_functions;
 
 struct Handler;
 #[async_trait]
 impl EventHandler for Handler {
     async fn message(&self, _ctx: Context, msg: Message) {
-        let watcher_file = match File::open("./.watchers").await {
+        let lock = CONFIG.lock().await;
+
+        let cfg = lock.get().unwrap();
+
+        let path = &cfg.directories.watchfile;
+
+        let watcher_file = match File::open(path.to_string() + "/.watchers").await {
             Ok(f) => f,
-            Err(e) => {
-                warn!("watcher file not found, not indexing message ({e})");
+            Err(_) => {
                 return;
             }
         };
@@ -116,6 +123,12 @@ async fn main() {
         .with_module_level("get_img", LevelFilter::Info)
         .init()
         .unwrap();
+    if let Err(e) = config::config_functions::read_config().await {
+        error!("error reading config file: {e}");
+        return;
+    } else {
+        info!("successfully read config file!")
+    };
     let token: String = match env::var("DISCORD_TOKEN") {
         Ok(token) => {
             info!("token found in env!");
