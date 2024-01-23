@@ -38,6 +38,8 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
 
     status_message(&ctx, "downloading attachments...", interaction).await;
 
+    // this is still way too convoluted
+
     if let Ok(meta) = fs::metadata(path2.to_string() + "/output.txt").await {
         if meta.is_file() {
             if *option_bool {
@@ -48,7 +50,6 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
                     .unwrap();
                 read_file().await;
 
-                // TODO: remove some of the unwraps
                 info!("started to download attachments");
                 interaction
                     .create_followup(
