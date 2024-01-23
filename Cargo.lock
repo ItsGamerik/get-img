@@ -367,7 +367,7 @@ dependencies = [
 
 [[package]]
 name = "get-img"
-version = "0.4.0"
+version = "0.4.0-hotfix"
 dependencies = [
  "lazy_static",
  "log",
