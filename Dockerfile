@@ -16,6 +16,8 @@ RUN apt update && apt install -y libssl-dev ca-certificates
 
 WORKDIR /usr/get-img
 
+COPY config.toml .
+
 COPY --from=builder /usr/get-img/target/release/get-img /usr/get-img
 
 CMD ["/usr/get-img/get-img"]
