@@ -87,6 +87,10 @@ pub async fn index_all_messages(messages: Vec<Message>, ctx: &Context) {
         error!("error creating directory: {e}")
     }
 
+    // make sure to not create a random deadlock!
+
+    drop(lock);
+
     for message in messages {
         if let Some(thread) = &message.thread {
             let last_thread_message_id = match thread.last_message_id {

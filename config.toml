@@ -3,7 +3,7 @@
 watchfile = "."
 
 # download directory
-downloads = "./downloads"
+downloads = "./download"
 
 [downloading]
 # number of concurrent downloads
