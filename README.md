@@ -111,7 +111,7 @@ $ docker run -it -e "DISCORD_TOKEN=<your_token_here>" -e "GUILD_ID=<your_gid_her
 9. Now paste the link into your browser and add the bot to your discord server. If everything worked, the bot should now be on your discord server!
 
 
-*required permissions are: `Send Messages, Send Messages in Threads, Embed Links, Attach Files, Read Message History, Use Slash Commands`
+*required permissions are: `bot, applications.commands, Read Messages/View Channels, Send Messages, Attach Files, Read Message History`
 
 ## Additional useful links
 
