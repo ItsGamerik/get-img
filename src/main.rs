@@ -1,4 +1,4 @@
-use std::env;
+use std::{env, fs};
 
 use log::{error, info, warn, LevelFilter};
 use serenity::all::{GuildId, Interaction};
@@ -29,12 +29,15 @@ impl EventHandler for Handler {
 
         let path = &cfg.directories.watchfile;
 
-        let watcher_file = match File::open(path.to_string() + "/.watchers").await {
+        let watcher_file = match File::open(path.to_string() + ".watchers").await {
             Ok(f) => f,
-            Err(_) => {
+            Err(e) => {
+                error!("watchfile not found: {e}");
                 return;
             }
         };
+
+        drop(lock);
 
         let mut lines = tokio::io::BufReader::new(watcher_file).lines();
         while let Some(line) = lines.next_line().await.unwrap() {
@@ -129,6 +132,21 @@ async fn main() {
     } else {
         info!("successfully read config file!")
     };
+
+    let lock = CONFIG.lock().await;
+    let cfg = lock.get().unwrap();
+    let path = &cfg.directories.watchfile;
+
+    match fs::OpenOptions::new().write(true).create(true).open(path.to_string() + ".watchers") {
+        Ok(_) => (),
+        Err(e) => {
+            dbg!(path.to_string() + ".watchers");
+            error!("could not create watchfile: {e}");
+        }
+    }
+
+    drop(lock);
+
     let token: String = match env::var("DISCORD_TOKEN") {
         Ok(token) => {
             info!("token found in env!");
