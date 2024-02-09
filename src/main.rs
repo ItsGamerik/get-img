@@ -140,7 +140,6 @@ async fn main() {
     match fs::OpenOptions::new().write(true).create(true).open(path.to_string() + ".watchers") {
         Ok(_) => (),
         Err(e) => {
-            dbg!(path.to_string() + ".watchers");
             error!("could not create watchfile: {e}");
         }
     }

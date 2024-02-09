@@ -29,9 +29,7 @@ pub async fn read_config() -> Result<(), Box<dyn Error>> {
             .add("/")
             .to_string()
     }
-
-    dbg!(&config);
-
+    
     let config_cell = CONFIG.lock().await;
     config_cell.set(config).unwrap();
 
