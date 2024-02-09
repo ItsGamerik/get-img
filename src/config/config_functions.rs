@@ -15,21 +15,13 @@ pub async fn read_config() -> Result<(), Box<dyn Error>> {
 
     // add trailing slashes
     if !config.directories.downloads.ends_with('/') {
-        config.directories.downloads = config
-            .directories
-            .downloads
-            .add("/")
-            .to_string()
+        config.directories.downloads = config.directories.downloads.add("/").to_string()
     }
 
     if !config.directories.watchfile.ends_with('/') {
-        config.directories.watchfile = config
-            .directories
-            .watchfile
-            .add("/")
-            .to_string()
+        config.directories.watchfile = config.directories.watchfile.add("/").to_string()
     }
-    
+
     let config_cell = CONFIG.lock().await;
     config_cell.set(config).unwrap();
 

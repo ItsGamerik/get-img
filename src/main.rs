@@ -137,7 +137,11 @@ async fn main() {
     let cfg = lock.get().unwrap();
     let path = &cfg.directories.watchfile;
 
-    match fs::OpenOptions::new().write(true).create(true).open(path.to_string() + ".watchers") {
+    match fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .open(path.to_string() + ".watchers")
+    {
         Ok(_) => (),
         Err(e) => {
             error!("could not create watchfile: {e}");
