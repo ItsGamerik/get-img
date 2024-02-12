@@ -15,7 +15,7 @@ serde_json = "1.0.113"
 serenity = { version = "0.12.0", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "utils"] }
 simple_logger = "4.3.3"
 tokio = { version = "1.36", features = ["macros", "rt-multi-thread"] }
-toml = "0.8.9"
+toml = "0.8.10"
 
 [profile.release]
 # lto = true
