@@ -10,7 +10,7 @@ lazy_static = "1.4.0"
 log = "0.4.20"
 regex = "1.10.3"
 reqwest = "0.11.24"
-serde = { version = "1.0.196", features = ["derive"] }
+serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.114"
 serenity = { version = "0.12.0", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "utils"] }
 simple_logger = "4.3.3"
