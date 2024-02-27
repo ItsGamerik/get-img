@@ -64,7 +64,6 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
     let path = &cfg.directories.watchfile;
 
     let mut watch_track_file = match OpenOptions::new()
-        .write(true)
         .create(true)
         .append(true)
         .open(path.to_string() + ".watchers")
@@ -97,7 +96,7 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
         };
         // note: using format! is apparently slower than using .as_str etc.
         if json.id == option_channel.id {
-            delete_line_from_file(&format!("{path}/.watchers"), option_channel.id)
+            delete_line_from_file(&format!("{path}.watchers"), option_channel.id)
                 .await
                 .unwrap();
         }
@@ -131,7 +130,12 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
             while let Some(line) = lines.next_line().await.unwrap() {
                 let json: WatcherEntry = serde_json::from_str(&line).unwrap();
                 if json.id == option_channel.id {
-                    if let Err(e) = delete_line_from_file("./.watchers", option_channel.id).await {
+                    if let Err(e) = delete_line_from_file(
+                        (path.to_string() + ".watchers").as_str(),
+                        option_channel.id,
+                    )
+                    .await
+                    {
                         error!("an error occurred writing to file: {e}")
                     }
                 }

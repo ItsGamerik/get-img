@@ -20,10 +20,7 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
         ..
     }) = options.first()
     {
-        info!(
-            "trying to parse channel: {}",
-            channel.name.as_ref().unwrap()
-        );
+        info!("indexing channel: {}", channel.name.as_ref().unwrap());
         target_channel = channel;
         target_confirmed_message = format!(
             "added messages from channel **{}** to index",
@@ -37,6 +34,11 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
     status_message(&ctx, "indexing channel...", interaction).await;
 
     index(&ctx, target_channel).await;
+
+    info!(
+        "successfully added \"{}\" to index",
+        target_channel.name.as_ref().unwrap()
+    );
 
     edit_status_message(&ctx, &target_confirmed_message, interaction).await;
 }

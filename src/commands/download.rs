@@ -40,17 +40,18 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
 
     // this is still way too convoluted
 
-    if let Ok(meta) = fs::metadata(path2.to_string() + "/output.txt").await {
+    if let Ok(meta) = fs::metadata(path2.to_string() + "output.txt").await {
         if meta.is_file() {
             if *option_bool {
                 // case if dltodisk is true
-                let output_file = File::open(path2.to_string() + "/output.txt").await.unwrap();
+                info!("started to download attachments/uploading output.txt...");
+
+                let output_file = File::open(path2.to_string() + "output.txt").await.unwrap();
                 let attachment = CreateAttachment::file(&output_file, "output.txt")
                     .await
                     .unwrap();
                 read_file().await;
 
-                info!("started to download attachments");
                 interaction
                     .create_followup(
                         &ctx.http,
@@ -60,13 +61,15 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
                     )
                     .await
                     .unwrap();
+                info!("done downloading attachments/uploading output.txt");
                 ctx.set_presence(
                     Some(ActivityData::watching("Ready to go :D")),
                     OnlineStatus::Online,
                 );
             } else {
                 // if it is false
-                let output_file = File::open(path2.to_string() + "/output.txt").await.unwrap();
+                info!("starting to upload output.txt...");
+                let output_file = File::open(path2.to_string() + "output.txt").await.unwrap();
                 let attachment = CreateAttachment::file(&output_file, "output.txt")
                     .await
                     .unwrap();
@@ -80,6 +83,7 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
                     )
                     .await
                     .unwrap();
+                info!("Done uploading output.txt");
                 ctx.set_presence(
                     Some(ActivityData::watching("Ready to go :D")),
                     OnlineStatus::Online,
@@ -87,6 +91,7 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
             }
         }
     } else {
+        error!("tried to download messages, but found no index!");
         followup_status_message(
             &ctx,
             "not indexed yet. Try using `/index` to index first.",
@@ -100,7 +105,7 @@ async fn read_file() {
     let lock = CONFIG.lock().await;
     let cfg = lock.get().unwrap();
     let path = &cfg.directories.downloads;
-    let file = match File::open(path.to_string() + "/output.txt").await {
+    let file = match File::open(path.to_string() + "output.txt").await {
         Ok(f) => f,
         Err(e) => {
             error!("error reading output.txt: {e}");
@@ -149,7 +154,7 @@ pub async fn download_file(url: String) {
 
     let cleansed_file_name = re.replace(&file_name, "").to_string();
 
-    let root_path = path.to_string() + "/attachments/";
+    let root_path = path.to_string() + "attachments/";
     if fs::metadata(&root_path).await.is_err() {
         match fs::create_dir_all(&root_path).await {
             Ok(_) => info!("created attachment download dir, as it did not exist"),
