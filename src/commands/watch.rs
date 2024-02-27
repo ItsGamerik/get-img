@@ -64,7 +64,6 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
     let path = &cfg.directories.watchfile;
 
     let mut watch_track_file = match OpenOptions::new()
-        .write(true)
         .create(true)
         .append(true)
         .open(path.to_string() + ".watchers")

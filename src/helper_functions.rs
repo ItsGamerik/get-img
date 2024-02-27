@@ -76,7 +76,6 @@ pub async fn universal_message_writer(message: Message) {
     }
 
     let mut file = match OpenOptions::new()
-        .write(true)
         .create(true)
         .append(true)
         .open(path.to_string() + "output.txt")
