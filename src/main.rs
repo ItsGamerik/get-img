@@ -1,6 +1,6 @@
 use std::{env, fs};
 
-use log::{error, info, warn, LevelFilter};
+use log::{error, info, LevelFilter};
 use serenity::all::{GuildId, Interaction};
 use serenity::async_trait;
 use serenity::model::channel::Message;
@@ -108,7 +108,7 @@ impl EventHandler for Handler {
                     commands::download::run(ctx, &command, &command.data.options()).await;
                     Some(())
                 }
-                _ => Some(warn!(
+                _ => Some(error!(
                     "command not implemented: {}",
                     format!("{}", command.data.name)
                 )),

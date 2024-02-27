@@ -44,13 +44,14 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
         if meta.is_file() {
             if *option_bool {
                 // case if dltodisk is true
+                info!("started to download attachments/uploading output.txt...");
+
                 let output_file = File::open(path2.to_string() + "output.txt").await.unwrap();
                 let attachment = CreateAttachment::file(&output_file, "output.txt")
                     .await
                     .unwrap();
                 read_file().await;
 
-                info!("started to download attachments");
                 interaction
                     .create_followup(
                         &ctx.http,
@@ -60,12 +61,14 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
                     )
                     .await
                     .unwrap();
+                info!("done downloading attachments/uploading output.txt");
                 ctx.set_presence(
                     Some(ActivityData::watching("Ready to go :D")),
                     OnlineStatus::Online,
                 );
             } else {
                 // if it is false
+                info!("starting to upload output.txt...");
                 let output_file = File::open(path2.to_string() + "output.txt").await.unwrap();
                 let attachment = CreateAttachment::file(&output_file, "output.txt")
                     .await
@@ -80,6 +83,7 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
                     )
                     .await
                     .unwrap();
+                info!("Done uploading output.txt");
                 ctx.set_presence(
                     Some(ActivityData::watching("Ready to go :D")),
                     OnlineStatus::Online,
@@ -87,6 +91,7 @@ pub async fn run(ctx: Context, interaction: &CommandInteraction, options: &[Reso
             }
         }
     } else {
+        error!("tried to download messages, but found no index!");
         followup_status_message(
             &ctx,
             "not indexed yet. Try using `/index` to index first.",
