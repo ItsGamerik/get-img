@@ -90,6 +90,10 @@ You can also use docker to run the bot. Make sure to set the environment variabl
 $ docker run -it -e "DISCORD_TOKEN=<your_token_here>" -e "GUILD_ID=<your_gid_here>" get-img:<version>
 ```
 
+The executable can be found in the directory `/usr/get-img/get-img`.
+
+The downloaded files can be found in `/usr/get-img/download`.
+
 ## Setting up a bot through the Discord Developer Portal
 
 1. Go to the [Discord Developer page](https://discord.com/developers/applications).
