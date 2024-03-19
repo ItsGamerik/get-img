@@ -60,6 +60,8 @@ $ cargo run --release
 
 (or just run the executable)
 
+**if you encounter any bugs or unexpected behaviour, make sure to open an issue on GitHub!**
+
 ### Commands
 
 (these commands have to be run on the discord server where the bot is running)
@@ -84,15 +86,16 @@ you have to be an administrator of the discord server you are using the bot in t
 
 ### Docker
 
-**Docker images are available [on the Docker Hub](https://hub.docker.com/r/gamerik/get-img) or on the [Packages](https://github.com/ItsGamerik?tab=packages&repo_name=get-img) page on GitHub**
+**Docker images are available [on the Docker Hub](https://hub.docker.com/r/gamerik/get-img) or the [Packages](https://github.com/ItsGamerik?tab=packages&repo_name=get-img) page on GitHub**
 
 You can also use docker to run the bot. Make sure to set the environment variables as described above.
 
 to build the docker image, you will have to run
 ```shell
-# docker
+# using docker
 $ docker build . --tag=<your_tag>
-# podman
+
+# using podman
 $ podman build . --tag=<your_tag>
 ```
 > The executable can be found in the directory `/usr/get-img/get-img`.
@@ -102,9 +105,10 @@ you can delete the builder helper image once the build process has completed.
 
 to run a container, use the following command:
 ```shell
-# docker
+# using docker
 $ docker run -it -e "DISCORD_TOKEN=<your_token_here>" -e "GUILD_ID=<your_gid_here>" get-img:<version>
-# podman
+
+# using podman
 $ podman run -it -e "DISCORD_TOKEN=<your_token_here>" -e "GUILD_ID=<your_gid_here>" get-img:<version>
 ```
 > The downloaded files can be found in `/usr/get-img/download`.
@@ -127,7 +131,7 @@ $ podman run -it -e "DISCORD_TOKEN=<your_token_here>" -e "GUILD_ID=<your_gid_her
 
 8. Scroll down to the switch called `Message Content Intent`. Check the switch. This will be necessary to read the messages in channels.
 
-9. Now paste the link into your browser and add the bot to your discord server. If everything worked, the bot should now be on your discord server!
+9. Now paste the link into your browser and add the bot to your discord server. If everything worked, the bot should now be on your discord server and work as expected.
 
 
 *required permissions are: `bot, applications.commands, Read Messages/View Channels, Send Messages, Attach Files, Read Message History`
