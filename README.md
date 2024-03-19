@@ -12,7 +12,7 @@ Index and download messages, attachments, and threads to save the entire content
   
 ### Building
 
-> instructions for using docker can be found [here](https://github.com/ItsGamerik/get-img?tab=readme-ov-file#docker)
+> instructions for using docker can be found [here](https://github.com/ItsGamerik/get-img#docker)
 
 for compiling you will need the OpenSSL development package:
 ```shell
