@@ -86,7 +86,7 @@ you have to be an administrator of the discord server you are using the bot in t
 
 ### Docker
 
-**Docker images are available [on the Docker Hub](https://hub.docker.com/r/gamerik/get-img) or the [Packages](https://github.com/ItsGamerik?tab=packages&repo_name=get-img) page on GitHub**
+**Pre-built Docker images are available [on the Docker Hub](https://hub.docker.com/r/gamerik/get-img) or the [Packages](https://github.com/ItsGamerik?tab=packages&repo_name=get-img) page on GitHub**
 
 You can also use docker to run the bot. Make sure to set the environment variables as described above.
 
