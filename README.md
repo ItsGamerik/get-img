@@ -12,6 +12,8 @@ Index and download messages, attachments, and threads to save the entire content
   
 ### Building
 
+> instructions for using docker can be found [here](https://github.com/ItsGamerik/get-img?tab=readme-ov-file#docker)
+
 for compiling you will need the OpenSSL development package:
 ```shell
 # for deb-based distros
@@ -82,17 +84,30 @@ you have to be an administrator of the discord server you are using the bot in t
 
 ### Docker
 
-**Docker images are available [here](https://hub.docker.com/r/gamerik/get-img)**
+**Docker images are available [on the Docker Hub](https://hub.docker.com/r/gamerik/get-img) or on the [Packages](https://github.com/ItsGamerik?tab=packages&repo_name=get-img) page on GitHub**
 
 You can also use docker to run the bot. Make sure to set the environment variables as described above.
 
+to build the docker image, you will have to run
 ```shell
-$ docker run -it -e "DISCORD_TOKEN=<your_token_here>" -e "GUILD_ID=<your_gid_here>" get-img:<version>
+# docker
+$ docker build . --tag=<your_tag>
+# podman
+$ podman build . --tag=<your_tag>
 ```
+> The executable can be found in the directory `/usr/get-img/get-img`.
 
-The executable can be found in the directory `/usr/get-img/get-img`.
+this will create two images, one for a builder helper and one for the actual application.
+you can delete the builder helper image once the build process has completed. 
 
-The downloaded files can be found in `/usr/get-img/download`.
+to run a container, use the following command:
+```shell
+# docker
+$ docker run -it -e "DISCORD_TOKEN=<your_token_here>" -e "GUILD_ID=<your_gid_here>" get-img:<version>
+# podman
+$ podman run -it -e "DISCORD_TOKEN=<your_token_here>" -e "GUILD_ID=<your_gid_here>" get-img:<version>
+```
+> The downloaded files can be found in `/usr/get-img/download`.
 
 ## Setting up a bot through the Discord Developer Portal
 
