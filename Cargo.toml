@@ -13,7 +13,7 @@ reqwest = "0.12.4"
 serde_json = "1.0.116"
 serde = { version = "1.0.199", features = ["derive"] }
 serenity = { version = "0.12.1", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "utils"] }
-simple_logger = "4.3.3"
+simple_logger = "5.0.0"
 tokio = { version = "1.37", features = ["macros", "rt-multi-thread"] }
 toml = "0.8.12"
 
