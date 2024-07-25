@@ -15,7 +15,7 @@ serde = { version = "1.0.204", features = ["derive"] }
 serenity = { version = "0.12.2", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "utils"] }
 simple_logger = "5.0.0"
 tokio = { version = "1.38", features = ["macros", "rt-multi-thread"] }
-toml = "0.8.14"
+toml = "0.8.15"
 
 [profile.release]
 # lto = true
