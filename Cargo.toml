@@ -11,7 +11,7 @@ log = "0.4.22"
 regex = "1.10.5"
 reqwest = "0.12.5"
 serde_json = "1.0.125"
-serde = { version = "1.0.208", features = ["derive"] }
+serde = { version = "1.0.210", features = ["derive"] }
 serenity = { version = "0.12.2", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "utils"] }
 simple_logger = "5.0.0"
 tokio = { version = "1.39", features = ["macros", "rt-multi-thread"] }
