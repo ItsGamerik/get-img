@@ -1,4 +1,5 @@
 # get-img: Discord image and message indexer
+(maybe i'll continue working on this on Codeberg)
 
 [![Build and test](https://github.com/ItsGamerik/get-img/actions/workflows/build.yml/badge.svg)](https://github.com/ItsGamerik/get-img/actions/workflows/build.yml)
 
